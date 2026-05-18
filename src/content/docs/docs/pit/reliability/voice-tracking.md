@@ -138,5 +138,5 @@ Precise voice tracking lets Stardust send `note-off` only for the voices that be
 - [Patch Sequencing](/docs/pit/features/patch-sequencing/)
 - [Plugin Crash Isolation](/docs/pit/reliability/plugin-crash-isolation/)
 - [Hot-Plug](/docs/pit/reliability/hot-plug/)
-- **MIDI Internals** <!-- TODO: dead wiki link to 'Learning: MIDI Internals' -->
-- **Real-Time Audio** <!-- TODO: dead wiki link to 'Architecture: Real-Time Audio' -->
+- MIDI Internals
+- [Real-Time Audio](/docs/pit/reliability/latency-budget/)

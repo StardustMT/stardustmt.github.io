@@ -122,7 +122,7 @@ If chaos test fails, build doesn't ship.
 
 ## Related pages
 
-- **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' --> (technical deep dive)
+- [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/) (technical deep dive)
 - [Pre-Show Validation](/docs/pit/reliability/pre-show-validation/)
 - [Voice Tracking](/docs/pit/reliability/voice-tracking/)
 - [Latency Budget](/docs/pit/reliability/latency-budget/) (where the 1ms goes)

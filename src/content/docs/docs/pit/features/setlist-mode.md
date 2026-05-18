@@ -80,4 +80,4 @@ While MT is the primary target, Setlist Mode also works for:
 - [Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)
 - [Patch Sequencing](/docs/pit/features/patch-sequencing/)
 - [Cue System](/docs/pit/features/cue-system/)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' --> (NextUpWidget)
+- Widget Registry (NextUpWidget)

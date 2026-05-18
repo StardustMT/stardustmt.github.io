@@ -55,7 +55,7 @@ flowchart TB
 
 Critically, **Overture knows nothing about Stardust**. It doesn't know what a Show is, a Patch is, or what musical theatre is. Anyone could use Overture to build a totally different audio app.
 
-See **Overture Library** <!-- TODO: dead wiki link to 'Architecture: Overture Library' --> for the full API surface.
+See [Overture Library](https://github.com/StardustMT/stardust-core) for the full API surface.
 
 ### 2. Stardust core (app-specific middleware)
 
@@ -79,7 +79,7 @@ The frontend sends Tauri commands (function calls into Rust) and receives Tauri 
 
 This pattern means the same UI components can later power a mobile companion app (Tauri Mobile) without rewriting the UI for a different backend.
 
-See **Screen Inventory** <!-- TODO: dead wiki link to 'UI: Screen Inventory' --> for every screen and component.
+See Screen Inventory for every screen and component.
 
 ## Process model
 
@@ -93,7 +93,7 @@ Crash isolation. VST3 plugins are third-party C++ that runs on the audio thread.
 
 Stardust hosts each plugin (or small group) in a **child process**. The audio engine communicates with plugins via **shared-memory ring buffers** to minimize IPC latency (~1 ms typical). If a plugin crashes, the audio engine catches the disconnect, sends all-notes-off, and either restarts the plugin or falls back gracefully — without affecting the rest of the show.
 
-See **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' --> for details.
+See [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/) for details.
 
 ## What lives where
 
@@ -120,15 +120,15 @@ Each layer has a clean purpose:
 
 The license split (Apache 2.0 lib, GPL 3 app) intentionally reinforces this: the library wants maximum adoption, the app wants protection from closed-source forks.
 
-See **the license decision write-up** <!-- TODO: dead wiki link to 'ADR: License Split (GPL + Apache)' --> for the why.
+See the license decision write-up for the why.
 
 ## Related pages
 
 - [Tauri Stack](/docs/pit/architecture/tauri-stack/)
-- **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' -->
-- **Real-Time Audio** <!-- TODO: dead wiki link to 'Architecture: Real-Time Audio' -->
-- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->
-- **File Format** <!-- TODO: dead wiki link to 'Architecture: File Format' -->
-- **Overture Library** <!-- TODO: dead wiki link to 'Architecture: Overture Library' -->
-- **ADR: Why Rust + Tauri** <!-- TODO: dead wiki link to 'ADR: Why Rust + Tauri' -->
-- **License Split** <!-- TODO: dead wiki link to 'ADR: License Split (GPL + Apache)' -->
+- [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/)
+- [Real-Time Audio](/docs/pit/reliability/latency-budget/)
+- Data Model
+- File Format
+- [Overture Library](https://github.com/StardustMT/stardust-core)
+- [ADR: Why Rust + Tauri](/docs/pit/architecture/tauri-stack/)
+- License Split

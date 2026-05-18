@@ -75,7 +75,7 @@ Enforced via:
 - Dynamic-dispatch-free plugin chain (flat array, indexed access)
 - `rt-assert`-style debug checks that catch allocations in the audio path
 
-See **RT Audio Constraints** <!-- TODO: dead wiki link to 'Learning: Real-Time Audio' -->.
+See [RT Audio Constraints](/docs/pit/reliability/latency-budget/).
 
 ## Thread priority
 
@@ -133,7 +133,7 @@ If your measured latency is higher than target:
 ## Related pages
 
 - [Hot-Plug Resilience](/docs/pit/reliability/hot-plug/)
-- **Real-Time Audio** <!-- TODO: dead wiki link to 'Architecture: Real-Time Audio' -->
-- **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' -->
+- [Real-Time Audio](/docs/pit/reliability/latency-budget/)
+- [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/)
 - [Audio I/O](/docs/pit/features/audio-io/)
-- **RT Audio Constraints** <!-- TODO: dead wiki link to 'Learning: Real-Time Audio' -->
+- [RT Audio Constraints](/docs/pit/reliability/latency-budget/)

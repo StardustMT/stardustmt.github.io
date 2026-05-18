@@ -111,7 +111,7 @@ Each device has an optional **visual schematic** — a stylized SVG showing the 
 
 For MVP, generic widgets (`<KeyboardWidget>`, `<FootswitchWidget>`, `<ExpressionPedalWidget>`) cover all functional needs even without device-specific schematics.
 
-See **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->.
+See Widget Registry.
 
 ## Auto-detection
 
@@ -138,5 +138,5 @@ For Bluetooth devices (AirTurn, iRig Blueboard), we use the device name string a
 - [MIDI Learn](/docs/pit/features/midi-learn/)
 - [Community Sharing](/docs/pit/features/community-sharing/)
 - [Cascading Settings](/docs/pit/concepts/cascading-settings/)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
-- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->
+- Widget Registry
+- Data Model

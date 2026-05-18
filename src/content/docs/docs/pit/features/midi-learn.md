@@ -93,7 +93,7 @@ See [Device Profiles](/docs/pit/features/device-profiles/) for related quirks.
 
 In Live Mode, a row of small dots shows real-time MIDI activity per device. Lets you confirm at a glance that your controls are talking. If something stops working mid-show, the dots tell you instantly whether the issue is hardware (no signal) or software (signal but no action).
 
-See **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->.
+See Widget Registry.
 
 ## Storage format
 
@@ -111,7 +111,7 @@ Mappings stored in the Show file as JSON:
 ]
 ```
 
-See **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->.
+See Data Model.
 
 ## Phase status
 
@@ -126,6 +126,6 @@ See **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->.
 - [Device Profiles](/docs/pit/features/device-profiles/)
 - [Cascading Settings](/docs/pit/concepts/cascading-settings/)
 - [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
-- **MIDI Internals** <!-- TODO: dead wiki link to 'Learning: MIDI Internals' -->
-- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->
+- Widget Registry
+- MIDI Internals
+- Data Model

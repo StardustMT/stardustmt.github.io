@@ -70,7 +70,7 @@ The `<NotesPane>` widget shows current notes. Resizable from the Layout tab. Scr
 
 Auto-scrolling on patch advance: when you advance to a Patch with its own notes, the pane updates to show those. Behavior configurable: instant swap, slide animation, or none.
 
-See **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->.
+See Widget Registry.
 
 ## Use case: forScore alternative
 
@@ -83,5 +83,5 @@ See [forScore Integration](/docs/pit/features/forscore-integration/) for the pro
 ## Related pages
 
 - [forScore Integration](/docs/pit/features/forscore-integration/)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
+- Widget Registry
 - [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)

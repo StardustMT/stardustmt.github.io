@@ -100,7 +100,7 @@ Current patch highlighted, others dimmed. Tap any patch to jump. Strip auto-scro
 
 Optionally show **next patch preview** as a separate widget — large text saying "Up next: Patch 4 — Glass" so you know what's coming.
 
-See **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->.
+See Widget Registry.
 
 ## Performance characteristics
 
@@ -126,5 +126,5 @@ See **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->.
 - [Cue System](/docs/pit/features/cue-system/)
 - [MIDI Learn](/docs/pit/features/midi-learn/) (footswitch mapping)
 - [Voice Tracking](/docs/pit/reliability/voice-tracking/)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
-- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->
+- Widget Registry
+- Data Model

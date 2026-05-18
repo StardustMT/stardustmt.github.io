@@ -83,4 +83,4 @@ Promised originally in v0.4 reliability work; deferred because building the rest
 
 - [Multi-keyboardist Sync](/docs/pit/features/multi-keyboardist-sync/) (same underlying protocol)
 - [Pre-Show Validation](/docs/pit/reliability/pre-show-validation/)
-- **Real-Time Audio** <!-- TODO: dead wiki link to 'Architecture: Real-Time Audio' -->
+- [Real-Time Audio](/docs/pit/reliability/latency-budget/)

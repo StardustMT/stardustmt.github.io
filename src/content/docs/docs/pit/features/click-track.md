@@ -77,11 +77,11 @@ Stardust can output MIDI Beat Clock (a standard MIDI Real-Time message at 24 PPQ
 }
 ```
 
-See **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->.
+See Data Model.
 
 ## Related pages
 
 - [Audio I/O](/docs/pit/features/audio-io/)
 - [MIDI Learn](/docs/pit/features/midi-learn/) (tap-tempo assignment)
 - [Cue System](/docs/pit/features/cue-system/) (bar/beat cues — v0.5+)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
+- Widget Registry

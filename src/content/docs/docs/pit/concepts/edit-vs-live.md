@@ -109,6 +109,6 @@ All achievable by configuring the Layout tab. Layouts can be saved and **shared 
 
 - [Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)
 - [Cascading Settings](/docs/pit/concepts/cascading-settings/)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
-- **Screen Inventory** <!-- TODO: dead wiki link to 'UI: Screen Inventory' -->
+- Widget Registry
+- Screen Inventory
 - [Performance Lock details](/docs/pit/reliability/performance-lock/)

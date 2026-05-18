@@ -105,4 +105,4 @@ See [Hot-Plug Resilience](/docs/pit/reliability/hot-plug/).
 - [Latency Budget](/docs/pit/reliability/latency-budget/)
 - [Hot-Plug Resilience](/docs/pit/reliability/hot-plug/)
 - [Click Track](/docs/pit/features/click-track/) (uses audio routing)
-- **Real-Time Audio** <!-- TODO: dead wiki link to 'Architecture: Real-Time Audio' -->
+- [Real-Time Audio](/docs/pit/reliability/latency-budget/)

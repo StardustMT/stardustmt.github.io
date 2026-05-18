@@ -77,7 +77,7 @@ Get the project infrastructure in place so that as soon as we start writing the 
 
 The big v0.1 lift: **stub every UI screen, widget, modal, and component in Storybook** before any are wired up. This becomes the canvas to iterate on the entire app's visual design before functional code exists.
 
-See **Screen Inventory** <!-- TODO: dead wiki link to 'UI: Screen Inventory' --> for the full list.
+See Screen Inventory for the full list.
 
 - ⚪ Color palette + theme tokens as a Storybook page
 - ⚪ All MVP widgets stubbed
@@ -124,9 +124,9 @@ v0.1 is foundation only. Resist scope creep.
 
 - [Roadmap](/docs/pit/roadmap/)
 - [v0.2 Core Engine](/docs/pit/roadmap/v0-2-core-engine/)
-- **Screen Inventory** <!-- TODO: dead wiki link to 'UI: Screen Inventory' -->
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
-- **Theme System** <!-- TODO: dead wiki link to 'UI: Theme System' -->
+- Screen Inventory
+- Widget Registry
+- Theme System
 
 ---
 
@@ -231,11 +231,11 @@ v0.2 is done when:
 - [v0.1](/docs/pit/roadmap/v0-1-foundations/)
 - [v0.3](/docs/pit/roadmap/v0-3-plugin-sandboxing-clap/)
 - [Roadmap](/docs/pit/roadmap/)
-- **Real-Time Audio** <!-- TODO: dead wiki link to 'Architecture: Real-Time Audio' -->
-- **Overture** <!-- TODO: dead wiki link to 'Architecture: Overture Library' -->
+- [Real-Time Audio](/docs/pit/reliability/latency-budget/)
+- [Overture](https://github.com/StardustMT/stardust-core)
 - [Latency Budget](/docs/pit/reliability/latency-budget/)
 - [Plugin Hosting](/docs/pit/features/plugin-hosting/)
-- **RT Audio Constraints** <!-- TODO: dead wiki link to 'Learning: Real-Time Audio' -->
+- [RT Audio Constraints](/docs/pit/reliability/latency-budget/)
 
 ---
 
@@ -268,7 +268,7 @@ If a plugin crashes:
 4. UI gets a notification toast
 5. Plugin gets flagged for quarantine if it crashes twice in the same session
 
-See **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' --> for IPC details.
+See [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/) for IPC details.
 
 #### Watchdog process
 
@@ -280,7 +280,7 @@ Add [`clack`](https://github.com/prokopyl/clack) for CLAP plugin hosting alongsi
 
 CLAP is a newer, open-source plugin format with built-in real-time guarantees. The ecosystem is small but growing — Surge XT, Vital, u-he Diva/Hive/Repro, Bitwig devices, Helm all ship CLAP versions. Not a replacement for VST3 (most commercial plugins are still VST3-only) but a real bonus.
 
-See [Plugin Hosting](/docs/pit/features/plugin-hosting/) and **why we support CLAP** <!-- TODO: dead wiki link to 'ADR: CLAP Support' -->.
+See [Plugin Hosting](/docs/pit/features/plugin-hosting/) and [why we support CLAP](/docs/pit/features/plugin-hosting/).
 
 #### Hot-plug resilience
 
@@ -363,11 +363,11 @@ v0.3 is done when:
 
 - [v0.2](/docs/pit/roadmap/v0-2-core-engine/)
 - [v0.4](/docs/pit/roadmap/v0-4-data-model-ui/)
-- **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' -->
+- [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/)
 - [Plugin Crash Isolation](/docs/pit/reliability/plugin-crash-isolation/)
 - [Hot-Plug Resilience](/docs/pit/reliability/hot-plug/)
-- **Sandboxing ADR** <!-- TODO: dead wiki link to 'ADR: Plugin Sandboxing Approach' -->
-- **CLAP ADR** <!-- TODO: dead wiki link to 'ADR: CLAP Support' -->
+- [Sandboxing ADR](https://github.com/StardustMT/stardust-workspace/blob/main/docs/adr/0002-out-of-process-plugin-sandboxing.md)
+- [CLAP ADR](/docs/pit/features/plugin-hosting/)
 
 ---
 
@@ -396,7 +396,7 @@ This is when Stardust becomes recognizable as the app — not just an audio engi
 
 #### Show / Song / Patch data model
 
-- Full data structures (see **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->)
+- Full data structures (see Data Model)
 - JSON + binary blob serialization
 - `.stardust-show` file format (zip bundle)
 - Save / load / autosave
@@ -444,7 +444,7 @@ See [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/).
 - Parameter favorites (live-tweakable widgets)
 - Panic button
 
-See [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/) and **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->.
+See [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/) and Widget Registry.
 
 #### Three core widgets
 
@@ -456,7 +456,7 @@ The MVP widget set:
 
 Plus supporting widgets: VU meters, CPU/latency indicator, MIDI activity, patch list strip, notes pane, panic button.
 
-See **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' --> for the full catalogue and v0.4+ widgets.
+See Widget Registry for the full catalogue and v0.4+ widgets.
 
 #### MIDI Learn (full UI)
 
@@ -494,7 +494,7 @@ See [Cue System](/docs/pit/features/cue-system/).
 - Plugins panel (scan folders, scan progress, quarantine list)
 - General panel (theme, autosave, terminology)
 
-See **File Format** <!-- TODO: dead wiki link to 'Architecture: File Format' --> for what gets persisted.
+See File Format for what gets persisted.
 
 #### Performance Lock toggle
 
@@ -532,10 +532,10 @@ v0.4 is done when:
 - [Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)
 - [Cascading Settings](/docs/pit/concepts/cascading-settings/)
 - [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
-- **Screen Inventory** <!-- TODO: dead wiki link to 'UI: Screen Inventory' -->
-- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->
-- **File Format** <!-- TODO: dead wiki link to 'Architecture: File Format' -->
+- Widget Registry
+- Screen Inventory
+- Data Model
+- File Format
 
 ---
 
@@ -779,7 +779,7 @@ These are v2.0+:
 - [v0.5](/docs/pit/roadmap/v0-5-mt-features/)
 - [v2.0+](/docs/pit/roadmap/v2-0-post-1-0/)
 - [Roadmap](/docs/pit/roadmap/)
-- **Contributing** <!-- TODO: dead wiki link to 'Contributing' -->
+- Contributing
 
 ---
 

@@ -107,7 +107,7 @@ Tauri starts ONE main process (Rust). That process:
 2. Runs Stardust's app code (Show/Song/Patch model, command handlers)
 3. **Embeds Overture** (audio library) — runs the audio thread inside this same process
 4. Spawns a system webview process for the UI (managed by Tauri)
-5. **Spawns child processes per VST plugin** for **sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' -->
+5. **Spawns child processes per VST plugin** for [sandboxing](/docs/pit/reliability/plugin-crash-isolation/)
 
 Total process count: 1 (Stardust) + 1 (webview, OS-managed) + N (plugins) = typically 5–15 processes for a real Show.
 
@@ -145,7 +145,7 @@ So: UI runs at 30-60 FPS for animations, audio thread runs at 375 callbacks/sec 
 ## Related pages
 
 - [Architecture Overview](/docs/pit/architecture/overview/)
-- **Real-Time Audio** <!-- TODO: dead wiki link to 'Architecture: Real-Time Audio' -->
-- **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' -->
-- **Screen Inventory** <!-- TODO: dead wiki link to 'UI: Screen Inventory' -->
-- **ADR: Why Rust + Tauri** <!-- TODO: dead wiki link to 'ADR: Why Rust + Tauri' -->
+- [Real-Time Audio](/docs/pit/reliability/latency-budget/)
+- [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/)
+- Screen Inventory
+- [ADR: Why Rust + Tauri](/docs/pit/architecture/tauri-stack/)

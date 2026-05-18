@@ -95,5 +95,5 @@ See [Patch Sequencing](/docs/pit/features/patch-sequencing/) for the full pictur
 - [Cascading Settings](/docs/pit/concepts/cascading-settings/)
 - [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
 - [Patch Sequencing](/docs/pit/features/patch-sequencing/)
-- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->
-- **Why we chose this hierarchy** <!-- TODO: dead wiki link to 'ADR: Show / Song / Patch Hierarchy' -->
+- Data Model
+- [Why we chose this hierarchy](/docs/pit/concepts/shows-songs-patches/)

@@ -29,7 +29,7 @@ If a plugin segfaults — and they do, especially older third-party C++ code:
 4. UI notification toast: "Spitfire BBC SO crashed — restarted"
 5. If a plugin crashes twice, it's quarantined for the rest of the session
 
-Most existing live hosts run plugins in-process for performance reasons, which means a single plugin crash takes the host down with it. Stardust accepts the ~1 ms IPC overhead to keep that from happening. See [Comparison](/docs/pit/comparison/) for how this compares across hosts, and **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' --> for IPC and process-model details.
+Most existing live hosts run plugins in-process for performance reasons, which means a single plugin crash takes the host down with it. Stardust accepts the ~1 ms IPC overhead to keep that from happening. See [Comparison](/docs/pit/comparison/) for how this compares across hosts, and [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/) for IPC and process-model details.
 
 ## Latency cost of sandboxing
 
@@ -70,13 +70,13 @@ We chose this over:
 
 The C++ shim is hidden behind a clean Rust API in Overture. If a pure Rust alternative emerges, we can swap internals without breaking the public API.
 
-See **VST3 Shim decision** <!-- TODO: dead wiki link to 'ADR: VST3 C++ Shim' -->.
+See [VST3 Shim decision](/docs/pit/features/plugin-hosting/).
 
 ## CLAP implementation (v0.3)
 
 CLAP support uses [`clack`](https://github.com/prokopyl/clack), the leading Rust CLAP host. Adds ~1 week of work; gives users access to Surge XT, Vital, u-he plugins in CLAP mode, and the growing CLAP ecosystem.
 
-See **CLAP decision** <!-- TODO: dead wiki link to 'ADR: CLAP Support' -->.
+See [CLAP decision](/docs/pit/features/plugin-hosting/).
 
 ## Test plugins for development
 
@@ -108,10 +108,10 @@ This stack validates VST3 hosting under all production conditions.
 
 ## Related pages
 
-- **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' -->
+- [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/)
 - [Crash Isolation](/docs/pit/reliability/plugin-crash-isolation/)
 - [Latency Budget](/docs/pit/reliability/latency-budget/)
 - [MIDI Learn](/docs/pit/features/midi-learn/)
-- **VST3 Shim ADR** <!-- TODO: dead wiki link to 'ADR: VST3 C++ Shim' -->
-- **CLAP ADR** <!-- TODO: dead wiki link to 'ADR: CLAP Support' -->
-- **VST3 Internals** <!-- TODO: dead wiki link to 'Learning: VST3 Plugin Model' -->
+- [VST3 Shim ADR](/docs/pit/features/plugin-hosting/)
+- [CLAP ADR](/docs/pit/features/plugin-hosting/)
+- [VST3 Internals](/docs/pit/features/plugin-hosting/)

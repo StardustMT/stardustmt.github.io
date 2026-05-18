@@ -85,10 +85,10 @@ For contributors:
 - The data model uses optional `Option<SettingOverride>` fields at each level
 - Resolution happens via a `resolve_setting()` function that walks up Patch → Song → Show
 - The override indicator UI is generated from the resolution chain (we know which level supplied the value)
-- See **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' --> for the full schema
+- See Data Model for the full schema
 
 ## Related pages
 
 - [Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)
 - [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
-- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->
+- Data Model

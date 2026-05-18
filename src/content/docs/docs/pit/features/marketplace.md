@@ -102,5 +102,5 @@ Creators are responsible for ensuring their listings don't infringe on copyright
 ## Related pages
 
 - [Community Sharing](/docs/pit/features/community-sharing/) (free side)
-- **File Format** <!-- TODO: dead wiki link to 'Architecture: File Format' --> (Show file format designed for marketplace from day one)
+- File Format (Show file format designed for marketplace from day one)
 - [Plugin Hosting](/docs/pit/features/plugin-hosting/) (plugin requirement validation)

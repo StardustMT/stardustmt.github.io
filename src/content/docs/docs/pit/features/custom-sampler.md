@@ -84,4 +84,4 @@ Custom samples stored in the Show's bundle (the `.stardust-show` zip):
 
 - [Plugin Hosting](/docs/pit/features/plugin-hosting/) (sampler is a built-in plugin in the VST chain)
 - [Community Sharing](/docs/pit/features/community-sharing/)
-- **File Format** <!-- TODO: dead wiki link to 'Architecture: File Format' --> (samples bundled in Show file)
+- File Format (samples bundled in Show file)

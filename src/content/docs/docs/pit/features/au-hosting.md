@@ -43,5 +43,5 @@ AU is macOS-only by Apple definition. Windows users use VST3 + CLAP. This is one
 ## Related pages
 
 - [Plugin Hosting](/docs/pit/features/plugin-hosting/)
-- **Plugin Sandboxing** <!-- TODO: dead wiki link to 'Architecture: Plugin Sandboxing' -->
+- [Plugin Sandboxing](/docs/pit/reliability/plugin-crash-isolation/)
 - [v2.0+](/docs/pit/roadmap/v2-0-post-1-0/)

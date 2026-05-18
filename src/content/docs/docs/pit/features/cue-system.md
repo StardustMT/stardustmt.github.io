@@ -96,7 +96,7 @@ Cues are part of the Song's JSON:
 ]
 ```
 
-See **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->.
+See Data Model.
 
 ## Cascading
 
@@ -132,4 +132,4 @@ This is v0.5–v1.0 territory. The cue system's data model is built generically 
 - [Device Profiles](/docs/pit/features/device-profiles/)
 - [Click Track](/docs/pit/features/click-track/) (for timed/bar cues)
 - [Cascading Settings](/docs/pit/concepts/cascading-settings/)
-- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->
+- Data Model

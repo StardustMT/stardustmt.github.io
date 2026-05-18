@@ -99,5 +99,5 @@ Items tagged for discovery:
 - [Marketplace](/docs/pit/features/marketplace/)
 - [Device Profiles](/docs/pit/features/device-profiles/)
 - [Custom Sampler](/docs/pit/features/custom-sampler/)
-- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' --> (layouts share widget configurations)
-- **Theme System** <!-- TODO: dead wiki link to 'UI: Theme System' -->
+- Widget Registry (layouts share widget configurations)
+- Theme System

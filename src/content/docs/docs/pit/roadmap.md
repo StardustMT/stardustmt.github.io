@@ -910,10 +910,24 @@ Originally on the wishlist but **dropped** — no MD interviewed needed this. Co
 
 Originally post-1.0; depends on community demand. Most plugins don't have Linux versions, so the practical use is limited unless using JACK + plugins like Surge XT or Vital. Not a priority.
 
+### Audio input rigs (guitar, bass, vocals, winds)
+
+Pivot from "synth host" to "realtime performance graph engine." Add audio-input as a first-class source type alongside MIDI: route a guitar, bass, vocal, or wind instrument through plugin effects with the same Show / Song / Patch model as a keys rig. Theatre-first competitor to Helix-style pedalboards — cue-aware, song-structured, doubler-friendly (clarinet → flute → EWI, electric → upright, etc.). Hosts existing amp-sim ecosystems (NAM, Guitarix, AIDA-X, Neural DSP) rather than building its own.
+
+Full design in [Audio input rigs](/docs/pit/features/audio-input/).
+
+### Plugin bundles + one-click installer
+
+Ship a curated set of theatre-ready open-source plugins out of the box, with optional downloadable packs (Synth Essentials, Guitar Pit Pack, Orchestral Toolkit, Mixing Essentials). The bundle infrastructure is the value, not the plugin count — schools, community theatre, and self-taught keyboardists get a working rig immediately instead of a Google search. Linked/discovery model for commercial plugins; auto-detect for already-installed system plugins.
+
+Could start with a basic plugin browser in v0.5 and grow through v1.x. Full design in [Plugin bundles + installer](/docs/pit/features/plugin-bundles/).
+
 ### Related pages
 
 - [Roadmap](/docs/pit/roadmap/)
 - [v1.0](/docs/pit/roadmap/v1-0-public-release/)
+- [Audio input rigs](/docs/pit/features/audio-input/)
+- [Plugin bundles + installer](/docs/pit/features/plugin-bundles/)
 - [Marketplace](/docs/pit/features/marketplace/)
 - [Community Sharing](/docs/pit/features/community-sharing/)
 - [AU Hosting](/docs/pit/features/au-hosting/)

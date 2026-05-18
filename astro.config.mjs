@@ -3,7 +3,10 @@ import { defineConfig } from "astro/config"
 import starlight from "@astrojs/starlight"
 
 export default defineConfig({
-  site: "https://stardust-mt.com",
+  // Deployed via GitHub Pages org page (repo: StardustMT/stardustmt.github.io).
+  // When a custom domain lands, update `site` accordingly.
+  site: "https://stardustmt.github.io",
+  trailingSlash: "always",
   integrations: [
     starlight({
       title: "Stardust",
@@ -16,7 +19,7 @@ export default defineConfig({
         github: "https://github.com/StardustMT",
       },
       editLink: {
-        baseUrl: "https://github.com/StardustMT/stardust-site/edit/main/",
+        baseUrl: "https://github.com/StardustMT/stardustmt.github.io/edit/main/",
       },
       lastUpdated: true,
       // Sidebar only shows on docs pages (splash pages don't render sidebar).

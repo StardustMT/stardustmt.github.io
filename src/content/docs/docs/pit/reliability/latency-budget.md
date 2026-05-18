@@ -1,5 +1,5 @@
 ---
-title: "Reliability: Latency Budget"
+title: "Latency Budget"
 description: "| Platform | Configuration | Target roundtrip |
 |---|---|---|
 | macOS | CoreAudio, 128 samples, 48 kHz | 3–6 ms |

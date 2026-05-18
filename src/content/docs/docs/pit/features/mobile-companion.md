@@ -1,5 +1,5 @@
 ---
-title: "Feature: Mobile Companion"
+title: "Mobile Companion"
 description: "Target version: v2.0+"
 ---
 

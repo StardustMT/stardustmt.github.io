@@ -1,5 +1,5 @@
 ---
-title: "Feature: Click Track"
+title: "Click Track"
 description: "Target version: v0.5"
 ---
 

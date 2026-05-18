@@ -1,5 +1,5 @@
 ---
-title: "Reliability: Plugin Crash Isolation"
+title: "Plugin Crash Isolation"
 description: "Target version: v0.3 (the entire point of v0.3)"
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Reliability: Performance Lock"
+title: "Performance Lock"
 description: "Target version: v0.3"
 ---
 

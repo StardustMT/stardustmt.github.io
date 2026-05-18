@@ -1,5 +1,5 @@
 ---
-title: "Reliability: Pre-Show Validation"
+title: "Pre-Show Validation"
 description: "Target version: v0.3"
 ---
 

@@ -1,0 +1,95 @@
+---
+title: "Plugin bundles + installer"
+description: "Curated bundles of open-source VST3 / CLAP plugins, installed at the push of a button. Get a working theatre rig out of the box; expand into specialist packs (synth, guitar, orchestral) when you need to."
+---
+
+> [!NOTE]
+> **Status: ⚪ Planned for v0.5+.** This is post-engine, post-data-model, post-MT-features work — once Pit is genuinely usable, the friction of "find and install a working set of plugins" becomes the main onboarding obstacle. Solving it is its own substantial feature.
+
+A fresh install of Pit is more useful with a working set of plugins already installed than with an empty plugin list and a Google search. The plan is to ship a **curated theatre-ready toolkit** and provide a **one-click installer** for additional packs.
+
+## The philosophy
+
+Don't bundle 300 plugins. Curate.
+
+The temptation in OSS audio is to ship everything that exists. That produces:
+- Bloated installs
+- Confusing UX (twelve EQs, which one do I use?)
+- License compliance nightmares
+- Stale plugins drift in quality and nobody owns the curation
+
+Instead: **a small, opinionated default install + optional downloadable packs**, with the curation itself as part of the value. A theatre keyboardist installing Pit should get a working rig immediately. A guitarist installing Pit should get amp sims + IRs immediately. A sound designer installing Pit should be able to opt into experimental packs.
+
+Stardust's job isn't to be the plugin author; it's to be the **trusted curator and frictionless installer** for theatre-relevant open-source audio.
+
+## Bundle structure
+
+**Day-one install** (~50 MB, ships with Pit):
+- Core synths: a clean polysynth, a versatile FM, a basic sampler
+- Essential utilities: EQ, compressor, limiter, gate, basic reverb
+- One amp sim suitable for both keys and guitar
+
+**Optional packs**, installed via the in-app browser:
+
+| Pack | Audience | Contents (illustrative) |
+|---|---|---|
+| Broadway Synth Pack | Keyboardists | Surge XT, Dexed, Helm + theatre-leaning presets |
+| Guitar Pit Pack | Guitarists | Neural Amp Modeler, Guitarix, AIDA-X, IR libraries |
+| Orchestral Toolkit | MDs / pit | sfizz + curated SFZ libraries, orchestral utilities |
+| Mixing Essentials | Anyone serious about output | ChowDSP, Airwindows, LSP utilities |
+| Reverb Pack | Anyone | Dragonfly Reverb, convolution IRs |
+| Experimental | Sound designers | Cardinal (modular), unusual DSP, glitchy stuff |
+| Linux Native | Linux users | Calf, x42, Linux-first ecosystem |
+
+Plus per-show-style packs ("Stephen Sondheim Synths", "1980s Rock Pit") as the community grows.
+
+## What's in scope to bundle
+
+The bundle infrastructure focuses on **open-source plugins with redistributable licenses**:
+
+- **GPLv3, LGPL, MPL 2.0, Apache 2.0, BSD, MIT** — all redistributable
+- **Plugins with explicit redistribution permission** from upstream
+- **Curated freeware** that's mainstream but not OSS (Surge XT is OSS; Spitfire LABS isn't) — these get **discovery + installation** through the bundle browser but aren't *redistributed* (the installer downloads from upstream)
+
+Each bundled plugin gets a license verification step before inclusion. The bundle UI surfaces license info clearly so users understand what they're installing.
+
+## Plugin finder + installer
+
+For plugins Pit doesn't redistribute, the bundle browser still helps users find and install them:
+
+- Searchable catalog with theatre-relevant filtering (instrument category, use case, license, platform)
+- One-click install for OSS plugins (download → verify → install → register with Pit)
+- For commercial / freeware-with-attribution: links to upstream + setup walkthroughs
+- Automatic detection of already-installed system plugins (so a user's existing iLok-licensed Neural DSP shows up in Pit's plugin list without re-install)
+
+## Discovery vs. redistribution
+
+A clean separation:
+
+- **Bundled** — Pit redistributes the binary, version-locked, tested, supported
+- **Linked** — Pit lists it, offers install guidance, doesn't redistribute (commercial / freeware-with-redistribution-restrictions)
+- **Found** — Pit auto-detects plugins already on the user's system
+
+The bundle UI uses the same surface for all three; the difference is invisible to the user except for licensing transparency.
+
+## Why this matters
+
+A working theatre rig requires *plugins that work together*. The OSS audio ecosystem has excellent individual plugins (Surge XT, NAM, ChowDSP, Airwindows) but the assembly cost is real — finding them, checking licenses, installing them, learning what each one is for. **For schools, community theatre, and self-taught keyboardists, that assembly cost is the difference between "I tried Stardust" and "I use Stardust."**
+
+A curated, opinionated, theatre-flavored install also gives Pit a clear identity:
+
+> *"Stardust is the open-source live-performance host that ships with the right plugins for a pit, out of the box."*
+
+That's a different product positioning than MainStage (closed ecosystem, polished UX, no plugin curation) or Gig Performer (open plugin support, you bring your own). It's a positioning that maps naturally onto theatre users specifically.
+
+## Order of operations
+
+- **v0.5** — basic plugin browser UI inside Pit's plugin picker
+- **v0.6 / v1.0** — one-click installer for core bundle, foundational packs (Synth, Guitar, Orchestral, Mixing)
+- **v1.x+** — community-submitted packs, license verification automation, per-show packs
+- **v2.0+** — integrates with [Stardust Galaxy](/docs/ecosystem/roadmap/) for shared installation manifests, presets, and full theatre rig bundles
+
+Related:
+- **[Plugin Hosting](/docs/pit/features/plugin-hosting/)** — the underlying VST3 / CLAP / AU support that bundles rely on
+- **[Community Sharing](/docs/pit/features/community-sharing/)** — the free hub for presets, layouts, profiles that grows alongside bundles
+- **[Marketplace](/docs/pit/features/marketplace/)** — the paid layer for premium content

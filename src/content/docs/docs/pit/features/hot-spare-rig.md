@@ -1,5 +1,5 @@
 ---
-title: "Feature: Hot-spare Rig"
+title: "Hot-spare Rig"
 description: "Target version: v2.0+"
 ---
 

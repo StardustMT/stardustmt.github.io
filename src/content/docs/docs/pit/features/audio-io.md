@@ -1,5 +1,5 @@
 ---
-title: "Feature: Audio I/O"
+title: "Audio I/O"
 description: "Phase: Basic in v0.2, full in v0.4"
 ---
 

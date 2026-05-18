@@ -1,5 +1,5 @@
 ---
-title: "Reliability: Voice Tracking"
+title: "Voice Tracking"
 description: "Target version: v0.2"
 ---
 

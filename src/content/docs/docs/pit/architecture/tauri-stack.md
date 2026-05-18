@@ -1,5 +1,5 @@
 ---
-title: "Architecture: Tauri Stack"
+title: "Tauri Stack"
 description: "[Tauri](https://tauri.app) is a Rust framework for building desktop apps with web-based UIs. Unlike Electron (which bundles Chromium, ~250 MB overhead), Taur..."
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Feature: Cue System"
+title: "Cue System"
 description: "A cue is a trigger → action pairing that fires during performance. Cues let you do things like:"
 ---
 

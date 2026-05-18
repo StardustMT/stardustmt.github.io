@@ -1,27 +1,38 @@
 ---
 // Custom site title with star wordmark and top-level nav: Home · Pit · Sheets · Docs.
 // Overrides the default Starlight SiteTitle.
-const pathname = Astro.url.pathname
+// Uses BASE_URL so links work both in dev (root) and on a project-page deploy.
 
-// Match by URL prefix so any nested page highlights the right top-level nav.
+const pathname = Astro.url.pathname
+const baseRaw = import.meta.env.BASE_URL ?? "/"
+const base = baseRaw.replace(/\/$/, "") // strip trailing slash for clean joins
+const link = (path: string) => (path === "/" ? `${base}/` : `${base}${path}`)
+
+const stripBase = (p: string) => {
+  if (!base || !p.startsWith(base)) return p
+  const trimmed = p.slice(base.length)
+  return trimmed.startsWith("/") ? trimmed : "/" + trimmed
+}
+const route = stripBase(pathname)
+
 const isActive = (prefix: string) => {
-  if (prefix === "/") return pathname === "/"
-  return pathname === prefix || pathname.startsWith(prefix + "/") || pathname === prefix.slice(0, -1)
+  if (prefix === "/") return route === "/" || route === ""
+  return route === prefix || route.startsWith(prefix)
 }
 ---
 
 <div class="header-inner">
-  <a href="/" class="site-title" aria-label="Stardust home">
+  <a href={link("/")} class="site-title" aria-label="Stardust home">
     <svg viewBox="0 0 24 24" aria-hidden="true" width="22" height="22" fill="currentColor">
       <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z"/>
     </svg>
     <span class="wordmark">Stardust</span>
   </a>
   <nav class="site-nav" aria-label="Primary">
-    <a href="/"        class:list={["nav-link", { active: isActive("/") }]}>Home</a>
-    <a href="/pit/"    class:list={["nav-link", { active: isActive("/pit/") }]}>Pit</a>
-    <a href="/sheets/" class:list={["nav-link", { active: isActive("/sheets/") }]}>Sheets</a>
-    <a href="/docs/"   class:list={["nav-link", { active: isActive("/docs/") }]}>Docs</a>
+    <a href={link("/")}        class:list={["nav-link", { active: isActive("/") }]}>Home</a>
+    <a href={link("/pit/")}    class:list={["nav-link", { active: isActive("/pit/") }]}>Pit</a>
+    <a href={link("/sheets/")} class:list={["nav-link", { active: isActive("/sheets/") }]}>Sheets</a>
+    <a href={link("/docs/")}   class:list={["nav-link", { active: isActive("/docs/") }]}>Docs</a>
   </nav>
 </div>
 
@@ -67,7 +78,6 @@ const isActive = (prefix: string) => {
     background: var(--sl-color-gray-6);
   }
 
-  /* On small screens, hide the wordmark and tighten spacing so the 4 nav links fit. */
   @media (max-width: 50rem) {
     .wordmark { display: none; }
     .header-inner { gap: 0.75rem; }

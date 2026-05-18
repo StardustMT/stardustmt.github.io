@@ -1,5 +1,5 @@
 ---
-title: "Feature: AU Hosting"
+title: "AU Hosting"
 description: "Target version: v2.0+"
 ---
 

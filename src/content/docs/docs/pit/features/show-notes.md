@@ -1,5 +1,5 @@
 ---
-title: "Feature: Show Notes"
+title: "Show Notes"
 description: "Target version: v0.5"
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Feature: Multi-keyboardist Sync"
+title: "Multi-keyboardist Sync"
 description: "Target version: v2.0+"
 ---
 

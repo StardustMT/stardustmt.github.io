@@ -1,5 +1,5 @@
 ---
-title: "Feature: Custom Sampler"
+title: "Custom Sampler"
 description: "Target version: v0.4 (moved up from v0.5 due to demand)"
 ---
 

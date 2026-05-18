@@ -1,0 +1,98 @@
+---
+title: "Audio input rigs (guitar, bass, vocals, winds)"
+description: "Bring analogue sources into Pit through an audio interface, route them through plugin effects, and treat them as first-class sources alongside MIDI keyboards. Cue-aware, song-structured, theatre-native."
+---
+
+> [!NOTE]
+> **Status: ⚪ Planned for v2.0+.** This is a substantial architectural expansion that pivots Pit from "synth host" to "realtime performance graph engine." The shape of the feature is decided; engineering happens after Pit v1.0 ships and the keyboard story is stable.
+
+Pit's day-one audience is keyboardists. But the same Show / Song / Patch model that organizes a keys book applies just as cleanly to **any** live audio source: guitar, bass, vocals, winds with pickup systems, electronic percussion, even live Foley. The architectural pivot is to model Pit not as a "synth host" but as a **realtime performance graph engine** where the input source is one of several types.
+
+## The shift
+
+```
+Today:    MIDI in → Plugin instrument → FX chain → Output
+v2.0+:    Source (MIDI | Audio in | Bus | Network) → Processing graph → Output
+```
+
+A patch becomes a **graph of sources flowing through processing to outputs**, with the same cascading-settings, transition, and cue-advancement semantics. Whether the source is a MIDI keyboard hitting a sampler or a guitar DI hitting an amp sim, the patch model is the same.
+
+## Why it fits theatre
+
+Pit's competitors in the audio-input space — Helix, Quad Cortex, AxeFX, Gig Performer — are **guitarist-first** tools that bolt on basic switching. Theatre rigs need different things:
+
+- **Cue-aware patch changes.** A guitarist in a show changes tone *at the downbeat of "Stars and the Moon"*, not at preset 12.
+- **Song-structured rigs.** Patches live inside Songs which live inside Shows. The MD's score and the keyboardist's rig speak the same vocabulary.
+- **Doublers.** Reed books with clarinet → flute → EWI, guitar → mandolin, bass → upright. Each doubled instrument needs its own chain; the *cue* drives which one is active.
+- **Conductor and MD integration.** Long-term, this opens cue followers, tempo sync, score-linked automation, and cross-pit coordination.
+
+The result is a category that doesn't currently exist: a **theatre-first** live audio processing environment that's as much pit-rig as it is pedalboard.
+
+## Use cases
+
+### Guitarist in a pit
+```
+Song 1 (Skid Row):  clean jazz tone → spring reverb → pit-safe EQ
+Song 2 (Feed Me):   distorted rock  → delay         → IR cab sim
+Song 3 (Suddenly):  acoustic DI     → compression   → subtle reverb
+```
+Patches advance with the show. Spillover handles delay/reverb tails across transitions.
+
+### Reed player
+A single performer with three instruments and four mics:
+```
+Clarinet mic  →  EQ + subtle hall reverb
+Flute         →  compression + HPF
+EWI           →  synth layer via plugin
+Bass clarinet →  EQ + low-end-safe compressor
+```
+Patches per song, with the active chain swapping based on which instrument the book calls for.
+
+### Bassist with electric + upright switching
+DI for electric, mic for upright. Patches manage both signal paths and which is monitored.
+
+### Vocalist FX (small productions)
+A solo performer running their own vocal processing: harmonizer for one song, big plate reverb for another, dry for spoken-word sections — all advanced by footswitch.
+
+## What we host (not build)
+
+Pit hosts plugins; it does not aim to *be* an amp modeler. The plugin hosting model already handles VST3, CLAP, and AU (macOS), so the existing ecosystems all light up:
+
+- **NAM** (Neural Amp Modeler) — open-source, excellent, huge model library
+- **Guitarix** — Linux-first guitar processing
+- **AIDA-X** — neural amp ecosystem
+- **Neural DSP**, **STL Tones**, **Helix Native** — commercial offerings
+- Any IR loader, any cab sim, any FX chain
+
+Stardust's value is the **orchestration layer**: cue-aware switching, theatre vocabulary, reliable patch changes, doubler-friendly rig modeling.
+
+## Engineering challenges
+
+This is harder than MIDI hosting in real ways:
+
+- **Lower latency tolerance.** A keys player can survive 6 ms round-trip; a guitarist monitoring their own attack cannot. Pit's audio engine has to be tighter for these workflows.
+- **Patch transitions without dropouts.** Spillover on reverb/delay tails, gain-matched crossfades, gapless plugin chain switching. Getting this wrong produces clicks and dead air mid-song — show-killing for guitarists in a way that's tolerable for keys players.
+- **CPU budgeting.** Guitar rigs chain many nonlinear plugins. Per-source DSP budgeting matters.
+- **Sample-accurate plugin parameter automation** across the audio-in → effects boundary.
+
+These are all addressable with disciplined engineering on top of the same out-of-process plugin sandboxing model (see [Plugin Crash Isolation](/docs/pit/reliability/plugin-crash-isolation/)). They just have to actually work, which means dedicated engineering time post-v1.
+
+## What this enables long-term
+
+- **Pit-wide patch coordination** — MD triggers a cue, every musician's rig advances together
+- **Conductor sync** — cue followers, tempo-locked effects, score-driven automation
+- **Production bundles** — a Show file ships guitar tones + keyboard patches + vocal chains + routing for the whole pit
+- **Cross-instrument doublers** — a single Sound that's a MIDI keyboard with an audio sidechain from a guitar
+
+These build naturally on the source-abstraction model; they don't require separate products.
+
+## Order of operations
+
+Realistically:
+
+1. Pit v1.0 ships (keyboard rigs solid)
+2. v1.x adds the source abstraction internally without exposing it (keyboards continue to work; audio-input is wired up but hidden)
+3. v2.0 surfaces audio-input as a real, supported source type with the full UX
+4. v2.x+ adds the theatre-specific automation (cue followers, conductor sync, pit-wide coordination)
+
+The architectural pivot doesn't break the keyboard workflows. It generalizes them.

@@ -1,5 +1,5 @@
 ---
-title: "Feature: Marketplace"
+title: "Marketplace"
 description: "Target version: v1.0-5"
 ---
 

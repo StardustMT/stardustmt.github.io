@@ -1,5 +1,5 @@
 ---
-title: "Feature: forScore Integration"
+title: "forScore Integration"
 description: "Target version: v0.5"
 ---
 

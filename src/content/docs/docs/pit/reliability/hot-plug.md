@@ -1,5 +1,5 @@
 ---
-title: "Reliability: Hot-Plug"
+title: "Hot-Plug"
 description: "Target version: v0.3"
 ---
 

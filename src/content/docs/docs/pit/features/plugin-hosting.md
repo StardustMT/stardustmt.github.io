@@ -1,5 +1,5 @@
 ---
-title: "Feature: Plugin Hosting"
+title: "Plugin Hosting"
 description: "Stardust hosts third-party audio plugins to provide the actual sounds. You drag a plugin (e.g. Spitfire BBC SO Discover, Surge XT, MuseSounds Strings) into a..."
 ---
 

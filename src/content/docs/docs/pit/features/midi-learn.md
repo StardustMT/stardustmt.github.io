@@ -1,5 +1,5 @@
 ---
-title: "Feature: MIDI Learn"
+title: "MIDI Learn"
 description: "MIDI Learn is the interactive way to map physical controls (knobs, faders, footswitches, expression pedals) to plugin parameters and Stardust actions."
 ---
 

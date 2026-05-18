@@ -1,5 +1,5 @@
 ---
-title: "Feature: Transpose"
+title: "Transpose"
 description: "Target version: v0.5"
 ---
 

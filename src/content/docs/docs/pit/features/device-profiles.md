@@ -1,5 +1,5 @@
 ---
-title: "Feature: Device Profiles"
+title: "Device Profiles"
 description: "A device profile is a JSON file describing a piece of hardware (keyboard, footswitch, expression pedal, MIDI controller). When Stardust detects a known devic..."
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Feature: Patch Sequencing"
+title: "Patch Sequencing"
 description: "Each Song in Stardust contains an ordered list of Patches that the keyboardist advances through during the performance. Press the footswitch → next patch loa..."
 ---
 

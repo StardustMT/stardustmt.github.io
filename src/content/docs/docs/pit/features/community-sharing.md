@@ -1,5 +1,5 @@
 ---
-title: "Feature: Community Sharing"
+title: "Community Sharing"
 description: "Target version: v0.5–v1.0"
 ---
 

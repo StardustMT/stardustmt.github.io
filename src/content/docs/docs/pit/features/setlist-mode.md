@@ -1,5 +1,5 @@
 ---
-title: "Feature: Setlist Mode"
+title: "Setlist Mode"
 description: "Target version: v0.5"
 ---
 

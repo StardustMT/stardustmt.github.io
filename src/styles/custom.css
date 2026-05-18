@@ -1,0 +1,16 @@
+/* Stardust palette — slate-cool dark with a slight warm tint, no gold. */
+:root {
+  --sl-color-accent-low: #1f2937;
+  --sl-color-accent: #4f7bb8;
+  --sl-color-accent-high: #cfe1ff;
+
+  --sl-color-bg: #0d1117;
+  --sl-color-bg-nav: #0a0e14;
+  --sl-color-bg-sidebar: #0a0e14;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #d7e4f5;
+  --sl-color-accent: #2f5da3;
+  --sl-color-accent-high: #1c3d72;
+}

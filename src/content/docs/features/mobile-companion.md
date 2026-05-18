@@ -1,0 +1,90 @@
+---
+title: "Feature: Mobile Companion"
+description: "Target version: v2.0+"
+---
+
+> Phone or tablet remote control for desktop Stardust. Browse patches, tweak parameters, view show notes — without leaving your seat.
+
+**Target version:** v2.0+
+
+## What it does
+
+A companion app (Tauri Mobile — iOS + Android) that connects to your desktop Stardust instance over LAN and lets you control it remotely.
+
+Useful for:
+- **Sound check**: walk around the room while another person plays; tweak parameters from a tablet at FOH position
+- **Quick reference**: peek at show notes / patch list on phone while keeping desktop screen clean
+- **Backup control surface**: if your laptop screen fails, phone-sized fallback for emergency advance
+
+## Important: NOT a mobile audio engine
+
+This is critical to understand. The companion is **purely a remote** — the audio engine still runs on the desktop. Mobile companion just sends commands and receives state updates.
+
+A full "Stardust on iPad with plugin hosting" is a *different product* (beyond v2.0+ scope — separate project) because:
+- iPad needs AUv3 host (not VST3 — different plugin format)
+- Audio engine would need rewriting for iOS audio (Core Audio on iOS ≠ Core Audio on macOS in important ways)
+- Plugin universe is entirely different
+
+For 1.0 + foreseeable future, mobile is **remote-only**.
+
+## iPad-specific consideration: forScore conflict
+
+Many MT keyboardists already use iPad for forScore (sheet music). Don't compete for that screen.
+
+**Approach:** mobile companion is designed as a **phone-first / small-screen** experience. On iPad, it can run in Slide Over (a small floating panel) alongside forScore. The companion is NOT designed to take over the iPad.
+
+See [forScore Integration](/features/forscore-integration/) for the deeper iPad story (mostly: send MIDI from Stardust to forScore for page turns).
+
+## Tauri Mobile reuse
+
+Tauri 2.0 supports iOS and Android. The mobile companion reuses:
+- React components from desktop
+- TypeScript state management
+- Same UI design language
+
+What's different:
+- Touch-first interactions (bigger tap targets, no hover)
+- Network sync layer instead of in-process
+- Reduced feature set (no Edit Mode on mobile — just play-time controls)
+
+## Network protocol
+
+Uses the same network sync code as [Multi-keyboardist Sync](/features/multi-keyboardist-sync/):
+- Desktop broadcasts state (current Show/Song/Patch, meters, MIDI activity)
+- Mobile sends commands (advance patch, tweak parameter, jump song)
+- TCP for commands (reliable), UDP multicast for state broadcasting (low latency)
+- Authentication via QR code pairing (scan from desktop to add mobile to authorized list)
+
+## What you can do from mobile
+
+- **Browse Shows / Songs / Patches** — read-only navigation
+- **Advance / previous patch** — large touch buttons
+- **Free-jump to Patch** — tap a patch from the strip
+- **View show notes** — for current Song/Patch
+- **Tweak exposed parameters** — touch sliders for parameters explicitly marked as "favorite"
+- **Trigger panic** — big red button
+- **View meters and MIDI activity**
+- **See latency / CPU status**
+
+## What you can't do from mobile
+
+- **Edit Patches** — go to desktop for that
+- **MIDI Learn** — desktop only
+- **Manage VST chain** — desktop only
+- **Settings** — desktop only
+
+Intentional simplification — the companion is a play-time control, not a duplicate of the desktop app.
+
+## Phase status
+
+| Phase | What's available |
+|---|---|
+| v2.0+ | Read-only remote: state mirroring, basic advance, view notes |
+| v2.0+ | Parameter tweaking, jump-to-patch, MIDI activity view |
+| Post-v2.0 | (Hypothetical) full mobile audio engine — separate product |
+
+## Related pages
+
+- [Multi-keyboardist Sync](/features/multi-keyboardist-sync/) (same network protocol)
+- [forScore Integration](/features/forscore-integration/)
+- [v2.0+](/roadmap/v2-0-post-1-0/)

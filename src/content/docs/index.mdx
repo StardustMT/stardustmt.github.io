@@ -1,0 +1,44 @@
+---
+title: Stardust
+description: Open-source live-performance tools for musical theatre. The first product is Stardust Pit — a virtual instrument host for keyboardists.
+template: splash
+hero:
+  tagline: Open-source, cross-platform live-performance tools for musical theatre — reliable enough to run a show.
+  actions:
+    - text: Explore Stardust Pit
+      link: /pit/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/StardustMT
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## The ecosystem
+
+<CardGrid>
+  <LinkCard
+    title="Stardust Pit →"
+    href="/pit/"
+    description="A virtual instrument host built for keyboardists running musical theatre shows. Cross-platform alternative to MainStage and Gig Performer. In active development."
+  />
+  <LinkCard
+    title="Stardust Sheets →"
+    href="/sheets/"
+    description="A production-aware score and script library with semantic overlays on PDFs. A forScore alternative built for production workflows. Planned post-Pit v1."
+  />
+  <Card title="Wider tooling" icon="setting">
+    Rehearse, Produce, Stage, Lighting, Galaxy. Speculative directions for the platform — named so the ecosystem trajectory is visible, built only if Pit and Sheets earn an audience that wants more. [See the ecosystem roadmap →](/docs/ecosystem/roadmap/)
+  </Card>
+</CardGrid>
+
+## Why this exists
+
+A musician's career depends on the patch loading mid-show. The dominant tool for the job is closed-source, macOS-only, and has well-known reliability gaps that any working keyboardist has stories about.
+
+Stardust is the open-source response — built on Rust + Tauri for cross-platform support, with out-of-process plugin sandboxing so a crashing plugin doesn't take down the host. Musical theatre vocabulary (Shows, Songs, Patches, Sounds) is first-class, not bolted on. Reliability isn't a feature; it's the point.
+
+[Read the design philosophy →](/docs/ecosystem/vision/)

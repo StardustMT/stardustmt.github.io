@@ -1,0 +1,50 @@
+---
+title: Stardust Sheets
+description: Production-aware score and script library with semantic overlays on PDFs. Planned post-Pit v1.
+template: splash
+hero:
+  tagline: A production-aware score and script library. PDFs stay the visual source of truth; semantic overlays make them navigable, annotatable, and shareable across a production.
+  actions:
+    - text: Read the design intent
+      link: /docs/sheets/
+      icon: right-arrow
+      variant: primary
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## The idea
+
+PDFs are how music and scripts actually move through a production. Trying to replace them with a new notation format is a multi-decade research project. Stardust Sheets takes a different path: keep PDFs as the visual ground truth, and layer semantic metadata on top — measures, rehearsal marks, codas, vamp markers, cue points.
+
+The result: a library that knows what page 4 measure 57 is, even though it's reading a PDF underneath. Pedals can jump to a coda. Annotations stick to the music, not the page. Productions can ship shared metadata layers while every performer keeps personal markup separate.
+
+## What it would do
+
+<CardGrid>
+  <Card title="Production-aware library" icon="document">
+    Group materials by production, role, and act. Distribute updates to everyone in a production at once. Track which performer is on which version.
+  </Card>
+  <Card title="Semantic navigation" icon="forward-slash">
+    Jump to a measure, rehearsal mark, coda, or vamp range from a footswitch or MIDI trigger. Same anchor lives across PDF reflows and version updates.
+  </Card>
+  <Card title="Layered annotations" icon="pencil">
+    Personal markup, production markup, MD markup — separate layers, mergeable, exportable. Annotations follow you across devices.
+  </Card>
+  <Card title="Cross-platform" icon="rocket">
+    iPad-first as a reader, but Windows + macOS as full-fat editors. Not locked to one ecosystem the way forScore is.
+  </Card>
+</CardGrid>
+
+## Who it's for
+
+- Pit musicians who need a binder that survives a Broadway run
+- Music directors managing the keys book across casts and tours
+- Actors with handwritten blocking and lyric annotations
+- Arrangers and orchestrators sharing in-progress materials
+
+## Status
+
+**Planned post-Pit v1.** Sheets is a substantial second product — not something to split focus on while Pit is still pre-1.0. The design philosophy and ecosystem framing are documented; serious work begins after Pit ships.
+
+[See the design intent →](/docs/sheets/)

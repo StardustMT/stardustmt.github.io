@@ -1,16 +1,23 @@
-/* Stardust palette — slate-cool dark with a slight warm tint, no gold. */
+/* Stardust palette — slate-cool dark with a slight warm tint, no gold accents.
+   Backgrounds are scoped per theme; accents redefined for both. */
+
 :root {
+  /* Dark theme accents (Starlight default convention: :root = dark). */
   --sl-color-accent-low: #1f2937;
   --sl-color-accent: #4f7bb8;
   --sl-color-accent-high: #cfe1ff;
+}
 
-  --sl-color-bg: #0d1117;
-  --sl-color-bg-nav: #0a0e14;
-  --sl-color-bg-sidebar: #0a0e14;
+:root[data-theme="dark"] {
+  /* Slightly warmer-than-default dark backgrounds. */
+  --sl-color-bg: #0f1217;
+  --sl-color-bg-nav: #0b0e13;
+  --sl-color-bg-sidebar: #0b0e13;
 }
 
 :root[data-theme="light"] {
   --sl-color-accent-low: #d7e4f5;
   --sl-color-accent: #2f5da3;
   --sl-color-accent-high: #1c3d72;
+  /* Let Starlight handle light-theme bg defaults. */
 }

@@ -1,0 +1,56 @@
+---
+title: Stardust Pit
+description: A virtual instrument host built for musical theatre keyboardists. Cross-platform alternative to MainStage and Gig Performer.
+template: splash
+hero:
+  tagline: A virtual instrument host built for the pit — patches that load before the downbeat, plugins that can't take down the show, vocabulary that matches how theatre actually works.
+  actions:
+    - text: Read the docs
+      link: /docs/pit/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/StardustMT/stardust-pit
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## What it does
+
+<CardGrid>
+  <Card title="Multi-keyboard rigs" icon="laptop">
+    Compose a rig of keyboards, pads, footswitches, expression pedals. Layer instruments across keyboards with zones, splits, and transposition. Each device has its own MIDI in / out config.
+  </Card>
+  <Card title="Patch advancement" icon="forward-slash">
+    Every show is Shows → Songs → Patches. Advance via footswitch, MIDI, or keyboard. Patches preload so the change happens at the downbeat, not after it.
+  </Card>
+  <Card title="Plugin hosting" icon="puzzle">
+    VST3 and CLAP plugin support, with AU on macOS. Sandboxed per plugin — a crash takes the plugin's audio to silence, not the whole show.
+  </Card>
+  <Card title="Cascading settings" icon="setting">
+    Set up your rig once. Override only where a Show, Song, or Patch needs something different. The cascade shows where each value came from and lets you reset back.
+  </Card>
+</CardGrid>
+
+## Why this exists
+
+Every working theatre keyboardist has a story about MainStage crashing mid-show. The dominant tool for the job is closed-source, macOS-only, and has well-known reliability gaps. Whose career depends on it loading the patch on time? The musician's.
+
+Stardust Pit is the open-source response — built on Rust + Tauri for cross-platform support, with out-of-process plugin sandboxing so a misbehaving VST can't take down the host. Musical theatre vocabulary (Shows, Songs, Patches, Sounds) is first-class, not bolted on. Reliability isn't a feature; it's the point.
+
+## Status
+
+**In active development — v0.1 Foundations.** Not yet usable as a daily driver. Audio engine and plugin hosting land in v0.2; the full app proper in v0.4; the public 1.0 is the target.
+
+See the [Pit roadmap](/docs/pit/roadmap/) for version-by-version detail.
+
+## Where to dig in
+
+<CardGrid>
+  <LinkCard title="Shows, Songs, and Patches" href="/docs/pit/concepts/shows-songs-patches/" description="The core mental model" />
+  <LinkCard title="Cascading settings" href="/docs/pit/concepts/cascading-settings/" description="One rig, many shows, careful overrides" />
+  <LinkCard title="Architecture Overview" href="/docs/pit/architecture/overview/" description="How the Rust + Tauri pieces fit together" />
+  <LinkCard title="Comparison" href="/docs/pit/comparison/" description="Pit vs MainStage, Gig Performer, Cantabile, Camelot, Mainstage etc." />
+</CardGrid>

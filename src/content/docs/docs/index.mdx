@@ -1,0 +1,39 @@
+---
+title: Stardust documentation
+description: Reference, concepts, architecture, and roadmap for the Stardust ecosystem and its apps.
+template: splash
+hero:
+  tagline: Reference, concepts, architecture, and version roadmaps for the Stardust ecosystem and its apps.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## Pick a section
+
+<CardGrid>
+  <Card title="Stardust ecosystem" icon="setting">
+    Cross-app foundations: the platform vision, the principles that drive every product, the long-horizon roadmap.
+
+    <LinkCard title="Ecosystem docs →" href="/docs/ecosystem/" />
+  </Card>
+
+  <Card title="Stardust Pit" icon="rocket">
+    The virtual instrument host for musical theatre keyboardists. Concepts, architecture, features, reliability, version roadmap.
+
+    <LinkCard title="Pit docs →" href="/docs/pit/" />
+  </Card>
+
+  <Card title="Stardust Sheets" icon="document">
+    Production-aware score and script library. Currently design intent only; full docs land alongside development post-Pit v1.
+
+    <LinkCard title="Sheets docs →" href="/docs/sheets/" />
+  </Card>
+</CardGrid>
+
+## New to the project?
+
+Start with the [ecosystem overview](/docs/ecosystem/) to understand the platform framing, then jump into [Pit](/docs/pit/) — it's where the active engineering is happening.
+
+If you're tracking development, the [Pit roadmap](/docs/pit/roadmap/) has version-by-version milestones with exit criteria.
+
+If you're sizing Stardust against alternatives, the [comparison](/docs/pit/comparison/) covers Pit vs MainStage, Gig Performer, Cantabile, Camelot, and others.

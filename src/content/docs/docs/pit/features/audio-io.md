@@ -1,0 +1,108 @@
+---
+title: "Feature: Audio I/O"
+description: "Phase: Basic in v0.2, full in v0.4"
+---
+
+> Choose your audio device, sample rate, buffer size, routing. Test signals. Monitor latency. Standard but essential.
+
+**Phase:** Basic in v0.2, full in v0.4
+
+## What it does
+
+The Audio I/O panel is where you configure how Stardust talks to your audio hardware:
+
+- **Input device** — usually unused for Stardust (no audio input processing in MVP), but available
+- **Output device** — your USB interface, built-in speakers, or specific routing
+- **Sample rate** — 44.1 / 48 / 88.2 / 96 / 192 kHz
+- **Buffer size** — 32 / 64 / 128 / 256 / 512 / 1024 samples (latency vs CPU trade-off)
+- **Reported latency** — input + output + processing, with green/yellow/red zone indicator
+- **Channel routing** — map Stardust's logical outputs to physical channels of your interface
+- **Driver selection** (Windows only) — WASAPI / WASAPI Exclusive / ASIO
+
+## Sample rate guidance
+
+For musical theatre:
+- **48 kHz** — modern standard, what every interface and plugin supports natively. Default.
+- **44.1 kHz** — old CD standard. Some plugins prefer it. Slightly lower CPU.
+- **88.2 / 96 kHz** — pro audio, more CPU. Only useful if you care about audiophile-grade quality.
+- **192 kHz** — usually overkill, definitely more CPU.
+
+Match what your interface is set to natively to avoid sample rate conversion overhead.
+
+## Buffer size guidance
+
+| Buffer | Latency (at 48 kHz) | When to use |
+|---|---|---|
+| 32 samples | < 1 ms | Tracking with monitoring; impressive but unstable on slower machines |
+| 64 samples | 1.3 ms | Lowest practical for live performance; needs a fast machine |
+| **128 samples** | **2.7 ms** | **Sweet spot for live performance — recommended** |
+| 256 samples | 5.3 ms | Conservative for high-CPU plugin chains |
+| 512 samples | 10.7 ms | Very safe, audible delay but tolerable |
+| 1024 samples | 21.3 ms | Only for fixed-tempo / backing-track work |
+
+Stardust shows the total roundtrip latency (input + output + processing) so you can dial it in.
+
+## Driver selection (Windows)
+
+| Driver | Latency | Notes |
+|---|---|---|
+| **WASAPI (shared)** | 20-50 ms | Default; shares device with other apps; high latency |
+| **WASAPI (exclusive)** | 6-15 ms | Lower latency; takes exclusive control of the device |
+| **ASIO** | 3-10 ms | Lowest latency; requires interface-specific ASIO driver |
+
+For live performance: use **WASAPI Exclusive** or **ASIO** if your interface supports it. Stardust supports ASIO via direct binding (not through CPAL's abstraction).
+
+See [Latency Budget](/docs/pit/reliability/latency-budget/) for the full latency breakdown.
+
+## Channel routing
+
+Stardust internally has logical outputs:
+- **Main L/R** — the audience-facing audio (Songs + Patches)
+- **Click** — click track only
+- **Monitor mix** — optional sub-mix for in-ears
+- **Aux 1-4** — additional outputs for effects sends, etc.
+
+The Audio I/O panel lets you map these logical outputs to physical channels on your interface:
+- "Main L" → Channel 1
+- "Main R" → Channel 2
+- "Click" → Channel 3
+- "Monitor L" → Channel 5
+- etc.
+
+So you can route the audience-facing sound to FOH and your click to your in-ears without bleed.
+
+## Test tones
+
+Press a "Test Tone" button per channel — Stardust outputs a safe-level 440 Hz sine wave (or pink noise) for verification. Hold to play, release to stop. Useful for:
+- Confirming your routing is correct
+- Setting interface gain
+- Diagnosing a quiet channel
+
+## Level meters
+
+Per-channel input and output meters with peak hold. See levels in real time. Peak hold so you can spot momentary clips.
+
+## Sample rate mismatch warning
+
+If your interface is set to 44.1 kHz at the OS level but you've configured Stardust for 48 kHz, you'll get a warning. Sample rate conversion at the OS layer adds latency and can degrade quality.
+
+## Audio device hot-plug
+
+If your USB audio interface disconnects mid-show, Stardust falls back to the system default output (better silence-or-laptop-speakers than total dropout). On reconnect, you can manually switch back without restarting.
+
+See [Hot-Plug Resilience](/docs/pit/reliability/hot-plug/).
+
+## Phase status
+
+| Phase | What's available |
+|---|---|
+| v0.2 | Basic device selection (input, output, rate, buffer) |
+| v0.3 | Hot-plug recovery |
+| v0.4 | Full Audio panel with routing matrix, test tones, level meters, ASIO support |
+
+## Related pages
+
+- [Latency Budget](/docs/pit/reliability/latency-budget/)
+- [Hot-Plug Resilience](/docs/pit/reliability/hot-plug/)
+- [Click Track](/docs/pit/features/click-track/) (uses audio routing)
+- **Real-Time Audio** <!-- TODO: dead wiki link to 'Architecture: Real-Time Audio' -->

@@ -1,0 +1,142 @@
+---
+title: "Feature: Device Profiles"
+description: "A device profile is a JSON file describing a piece of hardware (keyboard, footswitch, expression pedal, MIDI controller). When Stardust detects a known devic..."
+---
+
+> Auto-detect your hardware and pre-label every knob, fader, and pedal — no manual MIDI Learn for known devices.
+
+## What it does
+
+A **device profile** is a JSON file describing a piece of hardware (keyboard, footswitch, expression pedal, MIDI controller). When Stardust detects a known device (via USB manufacturer/product ID), it auto-applies the profile:
+
+- Every control is labeled (Knob 1, Fader 3, S1 button, etc.)
+- Common mappings are pre-suggested (sustain pedal → CC 64, expression → CC 11)
+- Visual representation in the UI shows the actual control layout
+- Device-specific quirks are handled (e.g. Roland sustain slot, see below)
+
+The result: you plug in your RD-2000, Stardust says "Roland RD-2000 detected and configured," and you can start MIDI Learn-ing parameters immediately with friendly names.
+
+## Profile file format
+
+JSON, located in `device-profiles/` directory. Example:
+
+```json
+{
+  "name": "Roland RD-2000",
+  "manufacturer": "Roland",
+  "midi_ids": [{ "manufacturer": "0x41", "product": "0x6A" }],
+  "controls": [
+    { "type": "fader", "label": "Fader 1", "cc": 80, "channel": 1 },
+    { "type": "knob", "label": "Knob 1", "cc": 70, "channel": 1 },
+    { "type": "button", "label": "S1", "cc": 64, "channel": 1, "behavior": "momentary" },
+    { "type": "mod_wheel", "cc": 1, "channel": 1 },
+    { "type": "pitch_bend", "channel": 1 },
+    { "type": "sustain", "cc": 64, "channel": 1 }
+  ],
+  "quirks": {
+    "sustain_slot_as_footswitch_safe": true
+  }
+}
+```
+
+## Shipped profile library
+
+### v0.3 minimum (development hardware)
+
+For end-to-end testing of the device-profile system:
+
+- **Roland RD-2000** — 88-key stage piano with 9 faders, 9 knobs, S1/S2
+- **Boss FS-5U** — single footswitch
+- **Roland EV-5** — expression pedal
+- **Roland DP-10** — sustain pedal
+
+### v0.5 full library
+
+Keyboards:
+- Roland RD-2000, RD-88, RD-08
+- Nord Stage 3, Stage 4, Electro 6, Grand
+- Yamaha Montage M, MODX, CP88, CK88
+- Kawai MP11SE, MP7SE, VPC1
+- Korg Kronos, Nautilus, SV-2
+- Casio PX-S series
+
+Footswitches / pedals:
+- Boss FS-5U, FS-6, FS-7
+- Roland DP-10, DP-2, EV-5, EV-7
+- M-Audio EX-P
+- Yamaha FC7
+- Moog EP-3
+- iRig Blueboard (Bluetooth, 4-button)
+- Behringer FCB1010 (programmable foot controller)
+- AirTurn BT-105, BT500, Quad6
+
+MIDI controllers (for sound design):
+- Akai MPK series, MPD series
+- NI Komplete Kontrol S-series
+- Arturia KeyLab series
+- Novation Launchkey, LaunchControl
+
+## Custom profiles
+
+Users can extend by creating custom JSON profiles. Profiles can be:
+- Stored in user's local `device-profiles/` folder
+- Shared via the community sharing hub (see [Community Sharing](/docs/pit/features/community-sharing/))
+- Downloaded from the marketplace if creators publish them
+
+## Device-specific quirks
+
+Some hardware has known issues that we explicitly handle:
+
+### Roland sustain-slot footswitch hack
+
+Roland keyboards' sustain jack sends `CC 64` (sustain pedal messages). A common workaround is to plug a momentary footswitch (e.g. Boss FS-5U) into the sustain jack and use it to advance patches — but the sustained `CC 64 = 127` causes multi-patch-advance bugs in most hosts.
+
+When a footswitch is configured in a sustain slot (via the device profile or user designation), Stardust applies:
+- Debounce (default 150 ms)
+- Minimum patch-advance interval (default 200 ms, configurable per-Show)
+- Stuck-high CC 64 detection (treats sustained 127 as a single edge)
+
+See [MIDI Learn](/docs/pit/features/midi-learn/) for related handling.
+
+### Other handled quirks
+
+Documented per device in the profile JSON. Examples:
+- **Nord Stage 3**: encoder behavior (sends relative not absolute values)
+- **NI Komplete Kontrol**: NKS handshake for plugin browsing
+- **Yamaha keyboards**: Music Synthesizer Group (MSG) extensions
+
+## Visual representation
+
+Each device has an optional **visual schematic** — a stylized SVG showing the device's control layout. Clicking a control in the schematic opens its settings panel. v0.5+ feature; community-contributable.
+
+For MVP, generic widgets (`<KeyboardWidget>`, `<FootswitchWidget>`, `<ExpressionPedalWidget>`) cover all functional needs even without device-specific schematics.
+
+See **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->.
+
+## Auto-detection
+
+When a device is plugged in (USB):
+1. Stardust reads USB device descriptor (vendor ID, product ID)
+2. Matches against `midi_ids` in all loaded profiles
+3. If match: profile auto-applied, UI toast: "Roland RD-2000 detected"
+4. If no match: device appears as "Unknown MIDI Input — Manufacturer X" with all controls available via raw CC
+
+For Bluetooth devices (AirTurn, iRig Blueboard), we use the device name string as the match key — Bluetooth doesn't expose vendor/product IDs the same way.
+
+## Phase status
+
+| Phase | What's available |
+|---|---|
+| v0.3 | RD-2000, FS-5U, EV-5, DP-10 (test rig) |
+| v0.4 | Auto-detection + smart defaults in MIDI Learn |
+| v0.5 | Full device library (above) |
+| v1.0+ | Visual schematics |
+| v2.0+ | Community profile sharing hub |
+
+## Related pages
+
+- [MIDI Learn](/docs/pit/features/midi-learn/)
+- [Community Sharing](/docs/pit/features/community-sharing/)
+- [Cascading Settings](/docs/pit/concepts/cascading-settings/)
+- **Widget Registry** <!-- TODO: dead wiki link to 'UI: Widget Registry' -->
+- **Data Model** <!-- TODO: dead wiki link to 'Architecture: Data Model' -->

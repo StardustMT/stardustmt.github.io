@@ -21,12 +21,12 @@ When off (default): full app capability.
 
 ## Why this is its own toggle
 
-You might think this is the same as Live Mode. It's not.
+You might think this is the same as Perform mode. It's not.
 
-- **Live Mode** = a UI mode (what the user sees — performance-optimized layout)
+- **Perform mode** = a UI mode (what the user sees — performance-optimized layout)
 - **Performance Lock** = a behavioral mode (what the app *allows* — destructive ops blocked)
 
-They're orthogonal. You can be in Edit Mode with Performance Lock on (looking at editor but can't change anything). You can be in Live Mode with Performance Lock off (visual play view but able to make edits if needed).
+They're orthogonal. You can be in Program mode with Performance Lock on (looking at the editor but can't change anything). You can be in Perform mode with Performance Lock off (live layout but able to make edits if needed).
 
 Typical: both modes go together when you "Go Live."
 
@@ -50,7 +50,7 @@ Typical: both modes go together when you "Go Live."
 - Patch advance / previous (the whole point)
 - Direct Patch jump (1-9, MIDI cues)
 - Live parameter tweaking via mapped MIDI controls
-- Live parameter tweaking via UI "favorite" widgets in Live Mode
+- Live parameter tweaking via UI "favorite" widgets in Perform mode
 - Panic button
 - Latency / CPU monitoring
 - Auto-save (in background)
@@ -93,7 +93,7 @@ On End Show, full save runs to consolidate the snapshots.
 2. [Pre-show validation](/docs/pit/reliability/pre-show-validation/) runs
 3. If green: confirm dialog "Performance Lock active. Disabling edits until you click End Show."
 4. Click "Confirm" → Performance Lock on
-5. (Optional) Switch UI to Live Mode for performance visual layout
+5. (Optional) Switch UI to Perform mode for the performance layout
 6. Play the show
 
 ## "End Show" workflow
@@ -115,5 +115,5 @@ On End Show, full save runs to consolidate the snapshots.
 ## Related pages
 
 - [Pre-Show Validation](/docs/pit/reliability/pre-show-validation/)
-- [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
+- [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
 - [Latency Budget](/docs/pit/reliability/latency-budget/)

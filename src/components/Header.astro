@@ -1,0 +1,164 @@
+---
+import Default from "@astrojs/starlight/components/Header.astro"
+---
+
+<Default><slot /></Default>
+
+<nav class="stardust-topnav" aria-label="Primary">
+  <ul class="stardust-topnav__list">
+    <li class="stardust-topnav__item">
+      <a href="/docs/" class="stardust-topnav__link" aria-haspopup="true">Docs</a>
+      <ul class="stardust-topnav__menu" role="menu">
+        <li role="none" class="stardust-topnav__menu-heading">Stardust Pit</li>
+        <li role="menuitem"><a href="/docs/pit/">Overview</a></li>
+        <li role="menuitem"><a href="/docs/pit/concepts/shows-songs-patches/">Concepts</a></li>
+        <li role="menuitem"><a href="/docs/pit/architecture/overview/">Architecture</a></li>
+        <li role="menuitem"><a href="/docs/pit/features/plugin-hosting/">Features</a></li>
+        <li role="menuitem"><a href="/docs/pit/reliability/latency-budget/">Reliability</a></li>
+        <li role="menuitem"><a href="/docs/pit/screens/">Screens</a></li>
+        <li role="separator" class="stardust-topnav__menu-sep"></li>
+        <li role="none" class="stardust-topnav__menu-heading">Stardust Sheets</li>
+        <li role="menuitem"><a href="/docs/sheets/">Design intent</a></li>
+        <li role="separator" class="stardust-topnav__menu-sep"></li>
+        <li role="none" class="stardust-topnav__menu-heading">Ecosystem</li>
+        <li role="menuitem"><a href="/docs/ecosystem/">Overview</a></li>
+        <li role="menuitem"><a href="/docs/ecosystem/vision/">Vision</a></li>
+        <li role="menuitem"><a href="/docs/ecosystem/principles/">Principles</a></li>
+      </ul>
+    </li>
+    <li class="stardust-topnav__item">
+      <a href="/docs/pit/roadmap/" class="stardust-topnav__link" aria-haspopup="true">Roadmap</a>
+      <ul class="stardust-topnav__menu" role="menu">
+        <li role="menuitem"><a href="/docs/pit/roadmap/">Pit roadmap</a></li>
+        <li role="menuitem"><a href="/docs/ecosystem/roadmap/">Ecosystem roadmap</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+<style>
+  .stardust-topnav {
+    border-bottom: 1px solid var(--sl-color-hairline-shade);
+    background: var(--sl-color-bg);
+    padding: 0 var(--sl-nav-pad-x, 1rem);
+  }
+
+  .stardust-topnav__list {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .stardust-topnav__item {
+    position: relative;
+  }
+
+  .stardust-topnav__link {
+    display: inline-block;
+    padding: 0.5rem 0;
+    color: var(--sl-color-text);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--sl-text-sm);
+    border-bottom: 2px solid transparent;
+  }
+
+  .stardust-topnav__link:hover,
+  .stardust-topnav__link:focus-visible {
+    color: var(--sl-color-text-accent);
+    border-bottom-color: var(--sl-color-text-accent);
+  }
+
+  .stardust-topnav__menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 14rem;
+    list-style: none;
+    padding: 0.5rem 0;
+    margin: 0;
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-hairline-shade);
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition:
+      opacity 120ms ease-out,
+      transform 120ms ease-out,
+      visibility 0s linear 120ms;
+    z-index: 100;
+  }
+
+  .stardust-topnav__item:hover .stardust-topnav__menu,
+  .stardust-topnav__item:focus-within .stardust-topnav__menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition:
+      opacity 120ms ease-out,
+      transform 120ms ease-out,
+      visibility 0s;
+  }
+
+  .stardust-topnav__menu li {
+    margin: 0;
+  }
+
+  .stardust-topnav__menu a {
+    display: block;
+    padding: 0.4rem 1rem;
+    color: var(--sl-color-text);
+    text-decoration: none;
+    font-size: var(--sl-text-sm);
+  }
+
+  .stardust-topnav__menu a:hover,
+  .stardust-topnav__menu a:focus-visible {
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-text-accent);
+  }
+
+  .stardust-topnav__menu-heading {
+    padding: 0.4rem 1rem 0.2rem;
+    font-size: var(--sl-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-3);
+    font-weight: 600;
+  }
+
+  .stardust-topnav__menu-sep {
+    height: 1px;
+    background: var(--sl-color-hairline-shade);
+    margin: 0.25rem 0;
+  }
+
+  /* Mobile: collapse menus into flat anchors, no hover. */
+  @media (max-width: 50rem) {
+    .stardust-topnav__menu {
+      display: none;
+    }
+
+    .stardust-topnav__list {
+      gap: 1rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .stardust-topnav__link {
+      white-space: nowrap;
+    }
+  }
+
+  /* Respect reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    .stardust-topnav__menu {
+      transition: none;
+    }
+  }
+</style>

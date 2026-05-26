@@ -5,7 +5,7 @@ description: "Target version: v2.0+"
 
 > Native Audio Unit (AU) plugin support on macOS. The Apple-format equivalent of VST3.
 
-**Target version:** v2.0+
+**Status:** v1.x (if scope allows) — otherwise v2.0+. Pure-Rust AU host (`stardust-au`) is v2.0+ regardless.
 
 ## What it does
 

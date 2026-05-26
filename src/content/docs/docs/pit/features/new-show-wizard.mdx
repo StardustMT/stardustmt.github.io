@@ -1,0 +1,71 @@
+---
+title: "New Show wizard"
+description: "Six-step guided show creation. Run once per production; produces a fully configured show ready to author."
+---
+
+import { Badge, Steps } from '@astrojs/starlight/components';
+
+<Badge text="Planned · v0.9.0" variant="note" />
+
+> Setting up a new show from scratch is the most error-prone moment in the workflow. The wizard makes it boring.
+
+The New Show wizard is a **modal** (not a mode) that runs when you click "New Show" from the splash screen or `File → New`. Six steps, each step is one focused decision; the result is a valid `.stardustshow` you can immediately start authoring patches in.
+
+## The six steps
+
+<Steps>
+
+1. **Metadata** — Title, production name, year, music director name, optional poster image. Surfaces the [Production / Source / Distribution](/docs/pit/concepts/shows-songs-patches/) structure for revivals (default: leave Source blank).
+
+2. **Audio I/O** — Pick the audio device (input + output if separate), sample rate (auto-detected, 48 kHz default), buffer size (128 default with a CPU advisory). On Windows: WASAPI Exclusive vs ASIO selection. On macOS: just the device list.
+
+3. **MIDI device detection** — Scan for connected MIDI devices. The wizard lists each detected device with a label (auto-detected from device name) and a "test" button — press a key, see the activity dot. Devices can be renamed here.
+
+4. **Pre-add rig components** — Common starting components shown as a checklist: "Main keyboard" (keys + mod wheel + pitch bend + sustain), "Footswitch (panic)", "Footswitch (advance)", "Expression pedal", "Performance Lock toggle". Each adds a pre-configured component to Setup. Custom configurations come later — this is just to get going fast.
+
+5. **Songs** — Add the song list. Either type them one per line, or paste from a clipboard (smart parsing of common setlist formats: numbered lists, dashed lists, blank-line-separated). Each song starts with one empty patch.
+
+6. **Preferences** — Autosave on/off (default on), close-blocker on/off (default on), theme (Light/Dark/System), default layout template (Blank / Minimal / Cabaret / MD Console).
+
+</Steps>
+
+After step 6, the wizard produces a `.stardustshow` and opens it in Program mode.
+
+## What's not in the wizard
+
+These belong to Setup or Program mode, after the show exists:
+
+- Bus routing — uses defaults (main mix, IEM mix, click bus, conductor bus)
+- Plugin chains — every patch starts empty; you fill them in
+- Click tracks — added per-song in Program mode (v0.8.0+)
+- Layout details — uses the chosen template; refined in v0.11.0 layout editor
+
+The wizard's job is to get you from zero to "I can start authoring" in under 5 minutes. Anything more belongs to the dedicated screens.
+
+## Saved choices carry forward
+
+Several wizard choices are **per-user, not per-show**:
+
+- Default audio device + buffer
+- Default MIDI device list
+- Default theme
+- Default rig component checklist (your typical starting kit)
+
+These get saved to user preferences and pre-fill the next wizard run. The first wizard run is the longest; subsequent runs are mostly clicking Next.
+
+## Edge cases handled
+
+- **No audio device available** — wizard surfaces the error and offers to continue with a stub device (you can configure audio later in Setup).
+- **No MIDI devices connected** — wizard prompts to plug in and rescan, or continue without and add in Setup.
+- **Existing show with same title** — wizard prompts to rename or open the existing show.
+- **User closes mid-wizard** — partial state is discarded; nothing on disk.
+
+## Visual style
+
+The wizard is one of the few full-modal experiences in Pit. Sidebar of step indicators on the left, focused panel on the right, Back / Next / Cancel at the bottom. Inspired by the better installers, not the bad ones.
+
+## Related pages
+
+- [Splash screen](/docs/pit/screens/) (post-v0.9.0)
+- [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
+- [Device profiles](/docs/pit/features/device-profiles/)

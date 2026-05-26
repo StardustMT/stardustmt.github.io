@@ -1,0 +1,67 @@
+---
+title: "Engine monitor"
+description: "The widget that tells you what the engine is doing in real time — CPU, memory, xruns, peak, plugin status, latency, uptime."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="Planned · v0.11.0" variant="note" />
+
+> Engine monitor is the dashboard you watch while the audience is still filing in.
+
+A widget you place on your Perform-mode layout (typically tucked into a corner) that surfaces everything the engine knows about itself.
+
+## What's displayed
+
+- **CPU** — engine-thread CPU usage as a percentage
+- **RAM** — total resident memory used by the engine + all sandboxed plugins
+- **xrun count** — number of audio underruns since the engine started (incremented per dropout)
+- **Peak** — peak output level since last reset (dBFS), color-coded green/yellow/red
+- **MIDI activity** — per-device dots; a dot lights for any MIDI message received in the last 100 ms
+- **Plugin status** — each loaded plugin's state (running / loading / crashed / quarantined)
+- **Crash count** — total plugin crashes this session
+- **Latency** — measured round-trip latency, refreshed every 5 seconds
+- **Uptime** — how long the engine has been running (since app start or last engine restart)
+
+**Not displayed:** thermal data. Cross-platform thermal access is unreliable, and "engine got too hot" is not a useful signal during a show — by the time it matters, the dropouts have already happened.
+
+## Color thresholds
+
+The widget uses traffic-light colors so the at-a-glance signal is unambiguous:
+
+| Metric | Green | Yellow | Red |
+|---|---|---|---|
+| CPU | < 50% | 50–80% | > 80% |
+| RAM | < 4 GB | 4–6 GB | > 6 GB |
+| xruns | 0 | 1–5 | > 5 |
+| Peak (dBFS) | < −6 | −6 to −3 | > −3 |
+| Latency (ms) | < 10 | 10–20 | > 20 |
+| Crash count | 0 | 1 | ≥ 2 (quarantine kicks in) |
+
+Thresholds can be customized per-show in the widget settings.
+
+## Compact / expanded modes
+
+The widget has two layouts:
+
+- **Compact** — a single status pill: green/yellow/red dot + the worst-offending metric. Fits in a corner of a busy layout.
+- **Expanded** — the full table above. For when you have screen space and want the full picture.
+
+Tap/click toggles between them.
+
+## Why this matters
+
+Live performance is unforgiving. A spike from 60% to 95% CPU 30 seconds before the downbeat is something you want to see *now*, not discover when the audio drops out during the overture. The monitor surfaces these signals where they can actually do you good — in your eye line.
+
+## What feeds it
+
+- Engine sends metrics via Tauri events at 10 Hz
+- Plugin status comes from the watchdog (v0.7.0 sandboxing)
+- Latency comes from the same path as the [latency display](/docs/pit/reliability/latency-budget/) in audio settings
+- MIDI activity is fed from the per-device input thread (v0.6.0 hardware MIDI binding)
+
+## Related pages
+
+- [Latency budget](/docs/pit/reliability/latency-budget/)
+- [Plugin crash isolation](/docs/pit/reliability/plugin-crash-isolation/)
+- [Performance lock](/docs/pit/reliability/performance-lock/)

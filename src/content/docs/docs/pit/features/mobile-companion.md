@@ -5,7 +5,7 @@ description: "Target version: v2.0+"
 
 > Phone or tablet remote control for desktop Stardust. Browse patches, tweak parameters, view show notes — without leaving your seat.
 
-**Target version:** v2.0+
+**Status:** v2.0+ — Tauri Mobile, LAN remote.
 
 ## What it does
 

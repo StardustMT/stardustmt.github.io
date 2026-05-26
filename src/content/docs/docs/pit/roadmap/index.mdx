@@ -1,0 +1,624 @@
+---
+title: Pit roadmap
+description: Version-by-version path from Pit's current state to its v1.0 public release, with exit criteria per version. Semver release-shaped — every version is a real release, not a planning phase.
+---
+
+import { CardGrid, Card, Badge, LinkCard, Steps } from '@astrojs/starlight/components';
+
+Stardust Pit ships **release by release** under semantic versioning. v1.0 is the public release; every pre-1.0 version is a real, tagged, exit-criteria-bound release on the path to it. There is no "polish phase" — polish is v0.15.0, and after that the open beta becomes 1.0.
+
+## How to read this roadmap
+
+<Steps>
+
+1. **Each version has a theme and explicit exit criteria.** A version doesn't ship until its exit criteria are met. Adding scope mid-version means slipping the version, not silently re-defining it.
+
+2. **Status badges reflect ship state.** <Badge text="Shipped" variant="success" /> is tagged on GitHub. <Badge text="Next" variant="caution" /> is the active version. <Badge text="Planned" variant="note" /> is on the roadmap with a target version assigned. <Badge text="v1.x" variant="tip" /> and <Badge text="v2.0+" variant="tip" /> are post-1.0 backlog.
+
+3. **Refinement happens at the start of each version.** Before code is written for any version, the user and Claude walk through the scope in a refinement session and lock in concrete UX, data-model, and exit-criteria details. The bullets below are the committed-to scope, not the only scope.
+
+4. **A post-version review happens after each ships.** Items in scope that didn't land become tickets in the next version. Items that proved unnecessary get removed. The Tech Debt section captures things we ship anyway.
+
+5. **No hard deadlines.** Estimates are sized in engineering weeks, not calendar weeks. Total path to v1.0 is roughly **46 weeks of engineering** — calendar time depends on how much of each week is engineering. There is no committed date.
+
+</Steps>
+
+## At a glance
+
+<CardGrid>
+  <Card title="v0.5.0 — Multi-plugin chains" icon="approve-check-circle">
+    <Badge text="Shipped" variant="success" /> · 2026-05-26
+
+    Engine consumes full patch graphs. Native 3-band EQ + transpose + mix nodes. ADR-0006 accepted.
+  </Card>
+  <Card title="v0.6.0 — Engine completeness" icon="rocket">
+    <Badge text="Next" variant="caution" /> · ~2 weeks
+
+    Hardware MIDI bindings, plugin GUI hosting, engine Panic, scan caching, PR CI.
+  </Card>
+  <Card title="v0.7.0 — Plugin sandboxing" icon="shield">
+    <Badge text="Planned" variant="note" /> · ~6 weeks
+
+    Out-of-process plugin hosting. Watchdog, crash recovery, quarantine, soak tests. ADR-0002 implementation.
+  </Card>
+  <Card title="v0.8.0 — Transport + MD essentials" icon="moon">
+    <Badge text="Planned" variant="note" /> · ~4 weeks
+
+    Per-song + per-bar tempo, click engine + bus, MIDI clock send, tap tempo, pre-show validation.
+  </Card>
+  <Card title="v0.9.0 — Three-mode shell + splash + wizard" icon="setting">
+    <Badge text="Planned" variant="note" /> · ~3 weeks
+
+    Setup/Program/Perform modes wired, splash screen, New Show wizard, settings window, autosave.
+  </Card>
+  <Card title="v0.10.0 — Library + Pit Mixer" icon="document">
+    <Badge text="Planned" variant="note" /> · ~5 weeks
+
+    All-patches-as-references data model, drawing primitives, image widget, multi-channel audio input.
+  </Card>
+  <Card title="v0.11.0 — Perform mode + widgets" icon="laptop">
+    <Badge text="Planned" variant="note" /> · ~4 weeks
+
+    Layout editor, full widget catalog, conductor cam (USB webcam), Live fullscreen, layout templates.
+  </Card>
+  <Card title="v0.12.0 — Click editor + balance" icon="bars">
+    <Badge text="Planned" variant="note" /> · ~4 weeks
+
+    Click track editor (vamps, codas, cue points), LUFS-based balance tool, A/B compare, trim suggestions.
+  </Card>
+  <Card title="v0.13.0 — Backing tracks + bundle format" icon="random">
+    <Badge text="Planned" variant="note" /> · ~5 weeks
+
+    Audio decoding via Symphonia, song transport, .stardustshow/ bundle format, MIDI recording + audio bounce.
+  </Card>
+  <Card title="v0.14.0 — Native SFZ player" icon="puzzle">
+    <Badge text="Planned" variant="note" /> · ~2 weeks
+
+    Native `instrument.sfz` node, bundled GM piano, SFZ 1.0 opcode coverage, foundation for future sampler.
+  </Card>
+  <Card title="v0.15.0 — Polish + Extension API + release CI" icon="star">
+    <Badge text="Planned" variant="note" /> · ~4 weeks
+
+    Onboarding, theme editor, signed installers, crash reporter, telemetry, extension API v1, Stream Deck.
+  </Card>
+  <Card title="v1.0.0 — Public release" icon="rocket">
+    <Badge text="Planned" variant="note" /> · ~2 weeks beta
+
+    Open beta (10–20 friendly MDs), Discord, beta feedback addressed, public launch, auto-update.
+  </Card>
+</CardGrid>
+
+---
+
+## v0.5.0 — Multi-plugin chain hosting <Badge text="Shipped" variant="success" />
+
+**Tagged:** [`v0.5.0`](https://github.com/StardustMT/stardust-pit/releases/tag/v0.5.0) on 2026-05-26 · [commit `20bfeaa`](https://github.com/StardustMT/stardust-pit/commit/20bfeaa) (pit), [`8eeff2f`](https://github.com/StardustMT/stardust-core/commit/8eeff2f) (core).
+
+The engine stops short-circuiting to "first instrument" and walks the full patch graph. A topo-sorted, allocation-free `Plan` runs every block. Native nodes for 3-band stereo EQ, transpose, and mix ship in stardust-core so the engine has at least one full chain to exercise.
+
+- ✅ `engine_graph` Tauri command builds a `Plan` from a `Patch`
+- ✅ Native 3-band stereo EQ (low/mid/high crossover, allocation-safe)
+- ✅ Native transpose + mix nodes
+- ✅ Topo-sort + allocation-safe `Plan::process` per block
+- ✅ ADR-0006 accepted
+
+### Tech debt carried into v0.6.0
+
+These shipped intentionally — most get addressed by upcoming version work:
+
+- Patch-switch latency scales with plugin count → v0.7.0 warm-pool work mitigates
+- Plan rebinds only on plugin-choice change → v0.11.0 live param editing handles config-edit rebinds
+- `PluginEntry` leaks intentionally via `mem::forget` → cleaned up by v0.7.0 sandboxing rewrite
+- Live device change tears down plan → fixed by v0.6.0 `engine_rebind_routing`
+- EQ crossover frequencies are constants → revisit during audio.eq settings panel work
+
+---
+
+## v0.6.0 — Engine completeness <Badge text="Next" variant="caution" />
+
+**Theme:** Close the open audio-path items v0.5.0 left behind. Patch-switching becomes seamless; hardware controllers wire to nodes one-by-one; CI starts running on every PR.
+
+**Size:** ~2 weeks. **Status:** Refinement session is the next chunk of work.
+
+### Scope
+
+- **`engine_rebind_routing`** — swap MIDI/audio device without tearing down the Plan
+- **Per-source-node hardware MIDI binding** — pedals, wheels, pads, switches, knobs, faders bind to specific source nodes (no more "binds to first source.keyboard")
+- **Engine-level Panic** — all-notes-off + sustain-off across all channels
+- **Plugin scan caching** — mtime-keyed; replaces today's eager-and-uncached scan
+- **Button/switch rig component** — configurable action (panic, song advance, tap tempo, custom)
+- **Plugin GUI hosting** — basic CLAP GUI extension + window embedding
+- **Learn Master tool** — re-learn all rig components 1-by-1
+- **Default Windows audio = WASAPI Exclusive** — ASIO surfaced when available; WASAPI Shared as fallback
+- **Sine synth → `instrument.testtone`** — hidden from catalog, diagnostic-only
+- **GitHub Actions PR CI** — Rust check/clippy/fmt/test; TS eslint/prettier/tsc/vitest; Storybook build
+- **Tech debt cleanup** — fix `tsc --noEmit`; delete orphaned `sound/` components
+
+### Exit criteria
+
+- A patch with hardware controllers (sustain, expression, mod wheel, footswitch) and a plugin GUI works end-to-end with no engine restarts when changing audio device
+- Plugin scan does not re-scan on every launch
+- PR CI is required on `main` for both stardust-pit and stardust-core
+- All v0.5.0 tech-debt items above are either fixed or have a re-targeted future version
+
+---
+
+## v0.7.0 — Plugin sandboxing <Badge text="Planned" variant="note" />
+
+**Theme:** Implement [ADR-0002](../../architecture/). Plugins run in separate processes; a crashing plugin no longer crashes the host. This is the single most important reliability investment in pre-1.0.
+
+**Size:** ~6 weeks. The biggest pre-1.0 version. Almost entirely engine work.
+
+### Scope
+
+- Each plugin (or small co-loaded group) runs in a **child process**, communicating via shared-memory IPC
+- **Watchdog process** supervises the engine
+- **Plugin crash detection** → engine-level Panic → restart-or-silence policy
+- **Quarantine** after 2 crashes per session (user notified, plugin disabled for the show)
+- **Hot-plug resilience** — USB MIDI / audio device disconnect handled gracefully
+- **Performance Lock mode** — disables risky operations during a show
+- **Show plugin requirements tracking** — auto-computed; missing-plugin icons on patch name + node; greyed-out missing nodes; "find this plugin" link via CLAP `plugin.url` metadata
+- **4-hour soak test in CI** on macOS + Windows runners
+
+### Exit criteria
+
+- Killing a plugin's child process (deliberate `kill -9`) does not crash the host; affected patch falls back to silence with a clear UI banner
+- Soak test runs nightly without engine deadlock or memory growth
+- A show file shared from a friend who has plugins you don't shows missing-plugin warnings everywhere those plugins are referenced, with one-click "find this plugin"
+- ADR-0002 moves from "Accepted, planned" → "Accepted, implemented"
+
+---
+
+## v0.8.0 — Transport + MD essentials <Badge text="Planned" variant="note" />
+
+**Theme:** Tempo, click, and the engine clock. Things a musical director needs for any rehearsal or runthrough.
+
+**Size:** ~4 weeks.
+
+### Scope
+
+- **Per-song + per-bar tempo** — no master-show BPM; v0.12.0's click editor handles bar-by-bar
+- **Engine transport state** — stopped/playing/paused/position; first-class in the engine
+- **Click track engine node** — drives a dedicated bus output (separate from main mix)
+- **MIDI clock send** — for external rig sync
+- **Tap tempo** — via button/switch rig component
+- **Per-patch transpose UI** — surfaces the transpose node config in a usable way
+- **Pre-show validation dashboard** — first version; refined in v0.9.0 (gates Live entry) and v0.11.0
+
+### Exit criteria
+
+- A song with a click track and a tempo change at bar 17 plays correctly with the click changing tempo at that bar
+- External hardware can sync to Pit's MIDI clock send
+- Tap tempo on a footswitch sets the current song's BPM live
+
+---
+
+## v0.9.0 — Three-mode shell + splash + wizard <Badge text="Planned" variant="note" />
+
+**Theme:** Wire the [Setup / Program / Perform](../../concepts/setup-program-perform/) mode model into the actual app. Replace the diagnostic stand-in. Make first launch make sense.
+
+**Size:** ~3 weeks.
+
+### Scope
+
+- **ModeSwitcher wired into App.tsx** — Setup, Program, Perform as real screens
+- **Splash screen** — recent shows + New Show + Open Show
+- **New Show wizard** — 6 steps: metadata, audio I/O, MIDI device detect, pre-add rig components, songs, preferences
+- **Settings window** — floating, not a fourth mode
+- **Setup → Show Settings screen** — metadata, buses, master controls, autosave preferences
+- **Production-version metadata** — handles revivals (Production / Source / Distribution structure)
+- **Native file menu** — File / Edit / View / Window / Help. **No mode switches in the menu bar.**
+- **Autosave** — default on, user pref to disable
+- **Close-blocker on unsaved changes**
+- **"What's new" splash** on first launch after update (with "don't show again")
+- **Theme picker** — Light / Dark / System. Full theme editor is v0.15.0.
+- **Concept doc rewrite** — delete `edit-vs-live`, add `setup-program-perform` (done as part of doc rewrite ahead of this version)
+
+### Exit criteria
+
+- First launch shows the splash; New Show wizard produces a valid `.stardustshow`
+- Closing the app with unsaved changes prompts to save (or autosave has already kicked in)
+- The three modes are real screens with real navigation, not placeholders
+
+---
+
+## v0.10.0 — Library + reuse + drawing + Pit Mixer <Badge text="Planned" variant="note" />
+
+**Theme:** The data-model unification version. Every patch is a reference to a library entry; library entries scope to show or global. This is the foundation for the v1.x marketplace + the v2.0+ collaboration story.
+
+**Size:** ~5 weeks.
+
+### Scope — data model
+
+- **All-patches-as-references** — single model. Every patch lives in a library entry; every song instance is a reference.
+- **Library scope** — single `scope: "show" | "global"` field on each library entry
+- **Reference overrides** — split into Basic and Advanced:
+  - *Basic:* name, notes, tempo, transpose, trim, color, tags
+  - *Advanced:* MIDI channel offset, bus routing override, plugin param overrides, FX bypass, on-enter/exit triggers, custom CSS class
+- **Graph edits trigger merge UI** — per-instance update/keep/three-way-merge dialog
+- **Orphan handling** — deleted library entry → references freeze last graph as `orphan.snapshot`; banner + re-link / save-as-new / keep-snapshot options
+
+### Scope — UI
+
+- **Rig component widget editor** — grid sub-screen for compound widget appearance
+- **`source.compound` node kind**
+- **Live preview** — shows full configured controller widget (keys + wheels + sustain); excludes non-tone controllers
+- **Drawing primitives** — box, line, divider (weight / color / style)
+- **Image widget**
+- **Snap-to-grid** — default on
+
+### Scope — Pit Mixer
+
+- **Pit Mixer screen** — multi-channel audio **input** with per-channel meter / gain / pan / mute / solo, mixed to MD's IEM bus
+- **USB-multitrack only for v1.0** — Dante/AVB deferred to v2.0+
+
+### Scope — CI
+
+- **Visual regression** — Storybook via Chromatic or Percy
+
+### Exit criteria
+
+- A library entry deleted from disk produces orphan banners on every show that references it, with working re-link
+- Editing a library entry's graph while two song instances reference it triggers the merge dialog for each
+- The Pit Mixer routes 8+ channels of USB-multitrack input to the MD's IEM mix correctly
+
+---
+
+## v0.11.0 — Perform mode + widgets + conductor cam <Badge text="Planned" variant="note" />
+
+**Theme:** The Live view becomes real. Users build their own performance layout from the widget catalog. Conductor cam takes one input source for v1.0 (USB webcam) — RTSP / IP / NDI is v2.0+.
+
+**Size:** ~4 weeks.
+
+### Scope — layout editor
+
+- **Layout editor wired into App.tsx**
+- **Grid editor** — move / resize / rotate / z-order
+- **Global default layout + per-song override** — cascading
+- **Layout templates** — Blank, Minimal, Cabaret, MD Console
+- **Live fullscreen mode**
+- **Pre-show validation gate before Live** (overrideable)
+- **No hard-forced widgets** — every UI element is user-placed
+
+### Scope — widget catalog (refined during v0.11.0 spec session)
+
+Existing (carried forward): keyboard, pad, footswitch, button/switch, expression pedal, sustain pedal, rig component instance, song/patch list (full + condensed), dynamic text, static text, volume meter, transpose indicator, click indicator, next-patch preview, panic, parameter favorite, show notes, time elapsed.
+
+New in v0.11.0:
+
+- clock (with pause + splits — manual / auto-from-songs / auto-from-cuepoints)
+- notepad
+- engine monitor (CPU / RAM / xrun / peak / MIDI activity / plugin status / crash count / latency / uptime — **no thermal**)
+- transport
+- per-track mute
+- **conductor cam (USB webcam only)**
+- pad bank
+- macro knob
+- plugin parameter knob / slider
+- tap tempo button
+- crossfader
+- solo / mute per bus
+- send-level slider
+- bus meter
+- spectrum meter
+- quick action button
+- big text
+- bar/beat counter
+- section banner
+- custom markdown
+- cue countdown
+- recording indicator
+- status banner
+
+All MIDI widgets are **reactive** — they show live hardware state in Live.
+
+### Scope — conductor cam
+
+- USB webcam input only
+- Overlay info — song / patch / bar / beat / tempo / clock / custom text
+- Pop-out **floating Window** for second-monitor display
+
+### Exit criteria
+
+- A user can build a Cabaret-style 4-song layout from scratch in &lt;15 minutes
+- The widget catalog covers every entry in the committed list
+- Conductor cam runs at 30fps from a USB webcam with overlay info and a pop-out window
+
+---
+
+## v0.12.0 — Click track editor + balance tool <Badge text="Planned" variant="note" />
+
+**Theme:** Two pro-MD tools. The click track editor turns tempo into a first-class authorable artifact. The balance tool turns "is this patch louder than that one?" into a measurement, not a guess.
+
+**Size:** ~4 weeks.
+
+### Scope — click track editor
+
+- **No bake step** — always-live
+- **Bar-by-bar tempo** — numeric BPM, note=BPM notation, musical terms
+- **Tempo curve graph** with manual point editing (linear / instant / ease-in / ease-out / manual)
+- **Vamps, repeats, codas, cue points**
+- **Rits / ralls** via region selection
+- **Audition** with playhead scrub
+- **SMF Type 1 export / import** — tempo track + bar markers + cue points; vamps/repeats encoded as marker names (DAWs see them as markers but won't loop)
+
+### Scope — balance tool
+
+- **LUFS measurement** via the `ebur128` Rust crate, **offline render** (no speakers)
+- **Intra-patch** (per-instrument-node within a patch)
+- **Cross-patch** (within a song)
+- **Show-wide audit**
+- **True Peak (dBTP)** + **Loudness Range (LRA)** per patch
+- **Reference sequences** — sustain / attack / dynamic
+- **Velocity-normalized at v80** for v1.0 (velocity-curve measurement is v1.x backlog)
+- **Per-patch trim suggestions** + manual override
+- **Tilt EQ per patch** — single-knob low / mid / high
+- **A/B compare** against a reference patch
+
+### Exit criteria
+
+- A user can author a click track for a 3-act musical, with vamps + codas, and export it to SMF that opens correctly in a DAW
+- The balance tool flags a too-loud patch in a show and provides a trim suggestion that, when applied, brings it within 1 LU of the show median
+
+---
+
+## v0.13.0 — Backing tracks + bundle file format <Badge text="Planned" variant="note" />
+
+**Theme:** Backing tracks are the moment the file format needs to grow up from a single JSON to a bundle directory. We migrate the format here because backing tracks force the issue anyway.
+
+**Size:** ~5 weeks.
+
+### Scope — backing tracks
+
+- **Audio file decoding** via [Symphonia](https://github.com/pdeljanov/Symphonia) — mp3 / wav / flac / ogg
+- **Per-song tracks tab** — file, label, stem type, bus output, gain, pan, mute, start offset
+- **Song transport** — play / pause / stop / seek / position
+- **Cue points within tracks**
+- **Patch transport triggers** — onEnter / onExit per patch (optional, off by default)
+- **Vamp interaction** — vamp regions in click track + transport loops them; footswitch signals "end vamp at next loop point"
+- **MIDI clock sync** to transport BPM
+- **Sample-accurate cue jump**
+
+### Scope — bundle file format
+
+- **`.stardustshow/` folder** with extension — replaces single JSON
+- Contents: `show.json`, `libraries/`, `assets/audio`, `assets/images`, `assets/samples`, `thumbnails/`
+- **Opt-in zip export** for sharing
+- **Schema migration** from v1 JSON → bundle, per [ADR-0003](../../architecture/)
+
+### Scope — recording
+
+- **MIDI recording + audio bounce** — captures MIDI input live, plays through patches, renders to audio file
+- **No piano roll editor** in v1.0 (v1.x backlog)
+
+### Exit criteria
+
+- A show with backing tracks + a click + a MIDI sync target plays back sample-accurate
+- Old single-JSON shows open and migrate cleanly to bundle format
+- Vamp regions in the click editor loop the transport correctly
+
+---
+
+## v0.14.0 — Native SFZ player <Badge text="Planned" variant="note" />
+
+**Theme:** Stardust ships with a real instrument by default. No "first launch and there's no sound until you install a plugin." Bundled GM piano is built in.
+
+**Size:** ~2 weeks.
+
+### Scope
+
+- **Native `instrument.sfz` node** in patch graph — lives in stardust-core, in-process
+- **SFZ 1.0 opcode support** minimum; key 2.0 opcodes targeted for future sampler
+- **Bundled GM piano SFZ** (~3MB) auto-loads as default
+- **No standalone CLAP** — sforzando already exists; CLAP users use that
+- Establishes the foundation for the v2.0+ custom sampler and SFZ-pack marketplace
+
+### Exit criteria
+
+- A brand-new show with no plugins makes piano sound on first key press
+- The SFZ player passes a regression test suite against a reference SFZ pack
+
+---
+
+## v0.15.0 — Polish + extension API + release CI <Badge text="Planned" variant="note" />
+
+**Theme:** Everything that makes a 1.0 a 1.0. Installers, signing, telemetry, accessibility audit, the extension API, and the tech-debt sweep.
+
+**Size:** ~4 weeks.
+
+### Scope — polish
+
+- **Onboarding tour** — first-launch
+- **Theme editor** — full color picker, contrast checker that fails sub-AA themes, save/share themes
+- **Performance profile pass** on a 4-year-old laptop
+- **Accessibility audit** — WCAG 2.2 AA, full keyboard nav, screen reader, focus indicators, reduced-motion, live regions
+
+### Scope — release engineering
+
+- **Signed/notarized installers** — macOS + Windows + Linux AppImage
+- **Release CI/CD pipeline** — tag → build → signed artifacts → GitHub Releases
+- **Crash reporter** (opt-in) — GlitchTip or Sentry
+- **Telemetry** (opt-in, aggregate-only)
+
+### Scope — content
+
+- **5 demo shows bundled** — G&S public domain + community + tech demo
+- **Documentation site full coverage**
+- **Tutorial videos** — 3–5 short screencasts
+
+### Scope — extension API
+
+- **Extension API v1** — hybrid TypeScript + WASM, non-realtime
+  - UI widgets
+  - Importers / exporters
+  - Custom commands
+  - Hardware controllers
+- **ADR-0007** — Extension API architecture
+- **Stream Deck support** — bundled example extension
+- **Latency Budget doc** — per-API latency, hardware recommendations, what's improving
+
+### Scope — debt
+
+- **Tech debt sweep** — anything not naturally cleaned by another version
+
+### Exit criteria
+
+- Signed installers download from GitHub Releases and run without OS scary-dialogs
+- The accessibility audit produces zero blocking findings
+- Stream Deck example extension installs from the extension API and works
+- Tech debt list (below) is either resolved or explicitly deferred with rationale
+
+---
+
+## v1.0.0 — Public release <Badge text="Planned" variant="note" />
+
+**Theme:** Ship.
+
+**Size:** ~2 weeks of beta window before public.
+
+### Scope
+
+- **Open beta** — 10–20 friendly MDs, 2–3 week window
+- **Discord server** + GitHub Discussions organized
+- **Beta feedback addressed**
+- **Public launch**
+- **Auto-update** via Tauri's built-in updater
+
+### Exit criteria
+
+- Beta MDs report Pit is usable for a real show
+- No P0 bugs from beta open
+- Auto-update tested end-to-end on macOS + Windows
+
+---
+
+## v1.x backlog <Badge text="v1.x" variant="tip" />
+
+Features that need v1.0 to land first but are explicitly committed for a v1.x point release:
+
+- **Velocity-curve balance measurement** — 3-point at v40 / v80 / v120
+- **Piano roll editor** for recorded MIDI tracks
+- **Plugin library UX polish** — vendor grouping, favorites, tags, search
+- **Full DAW MIDI import** — multi-track SMF → click + per-instrument tracks
+- **Layout templates expansion** — more starting points
+- **AU plugin hosting** — if not in v1.0 (user tentatively wants in v1.0 if scope allows)
+
+---
+
+## v2.0+ backlog <Badge text="v2.0+" variant="tip" />
+
+Speculative or scope-too-large-for-1.x. Named so the direction is visible; commitment level varies.
+
+<CardGrid>
+  <Card title="Pure-Rust VST3 host" icon="seti:rust">
+    `stardust-vst3` extracted as standalone crate. ~3–6 months. Removes the v1.x C++ shim.
+  </Card>
+  <Card title="Pure-Rust AU host" icon="seti:rust">
+    `stardust-au`, macOS-only. ~4–6 months.
+  </Card>
+  <Card title="Realtime WASM extensions" icon="puzzle">
+    Custom DSP / graph nodes. Verified realtime contract. Extends the v0.15.0 extension API.
+  </Card>
+  <Card title="Marketplace" icon="seti:shell">
+    Paid + free content via Lemon Squeezy or Polar.sh (Merchant of Record). ~3–4 months dedicated.
+  </Card>
+  <Card title="Community share hub" icon="comment">
+    Free anonymous sharing. v1.x bridge step before marketplace.
+  </Card>
+  <Card title="Cloud sync + collaboration" icon="random">
+    CRDT-backed via Automerge. ~6 months.
+  </Card>
+  <Card title="Hot-spare rig sync" icon="laptop">
+    LAN-primary, cloud-fallback.
+  </Card>
+  <Card title="Multi-keyboardist LAN sync" icon="laptop">
+    Multiple Pit instances on a stage staying in lockstep.
+  </Card>
+  <Card title="Show Control" icon="setting">
+    MSC + OSC + Art-Net/sACN + LTC + MTC + show control panel. ~8–12 weeks. Turns Stardust into the ecosystem hub.
+  </Card>
+  <Card title="Mobile companion" icon="laptop">
+    Tauri Mobile, LAN remote.
+  </Card>
+  <Card title="Federation / self-hosted marketplace" icon="seti:shell">
+    Run your own instance.
+  </Card>
+  <Card title="Advanced cue system" icon="bars">
+    MSC deeper, QLab bidirectional, cue list timeline.
+  </Card>
+  <Card title="AI sound search" icon="magnifier">
+    Natural-language search across plugin presets + library.
+  </Card>
+  <Card title="Audio input rigs" icon="seti:audio">
+    Guitar / bass / vocals / winds via NAM / Guitarix / AIDA-X / Neural DSP.
+  </Card>
+  <Card title="Plugin bundles + one-click installer" icon="seti:shell">
+    Curated plugin sets that install together.
+  </Card>
+  <Card title="Custom sampler" icon="puzzle">
+    Record / import → SFZ generation. Builds on v0.14.0.
+  </Card>
+  <Card title="DMX / lighting" icon="seti:image">
+    Was dropped from v1.0 scope. Revisit if Show Control unlocks demand.
+  </Card>
+  <Card title="Conductor cam enhancements" icon="laptop">
+    RTSP/IP, NDI, capture-card UI affordance, virtual webcam streaming output.
+  </Card>
+</CardGrid>
+
+---
+
+## Tech debt
+
+We ship debt intentionally when the cost-of-fixing-now beats the cost-of-fixing-later. This list is the audit trail. Anything not naturally resolved by a later version gets explicitly addressed (or explicitly deferred) in v0.15.0.
+
+### Carried in from v0.5.0
+
+| Item | Why we shipped it | Cleanup target |
+|---|---|---|
+| Patch-switch latency scales with plugin count | Multi-plugin shipped first; warm-pool needs sandboxing | v0.7.0 |
+| Plan rebinds only on plugin-choice change (not config edits) | Edge case; live param editing not in scope yet | v0.11.0 |
+| `PluginEntry` leaks via `mem::forget` | Cheaper than fighting Rust lifetimes pre-sandboxing | v0.7.0 |
+| Live device change tears down plan | Refactor lands cleaner alongside `engine_rebind_routing` | v0.6.0 |
+| Hardware MIDI binds to first `source.keyboard` | Single-source patches still work; full binding is design work | v0.6.0 |
+| EQ crossover frequencies are constants | Settings panel is a bigger project | v0.15.0 polish |
+| Plugin GUI hosting missing | Engine-graph was the priority | v0.6.0 |
+| Velocity / sustain / QWERTY on on-screen keyboard | Partial in v0.6.0, full in v0.15.0 polish | v0.6.0 + v0.15.0 |
+| Dirty-tracking is a dot, not a close-blocker | Pre-shell model — proper UX needs the shell | v0.9.0 |
+| One show seeded; no New Show / Recent Shows UI | Splash + wizard live in v0.9.0 | v0.9.0 |
+| `tsc --noEmit` fails on tsconfig project-references bug | v0.6.0 touches build anyway | v0.6.0 |
+| Plugin metadata scan eager + uncached | Scan-cache is a v0.6.0 deliverable | v0.6.0 |
+| `cpal::DeviceTrait::name` deprecation warnings (3) | Visible noise but no correctness impact | v0.15.0 |
+| No graceful shutdown on engine thread | Process exit currently does the job | v0.15.0 |
+| Storybook `PluginUIDock` has no plugins | Plugin GUI work fixes naturally | v0.6.0 |
+| `sound/` components (plugin-browser, plugin-parameter-panel, midi-mapping-row, sound-flow) orphaned | v0.10.0 library work supersedes them | v0.10.0 |
+| No autosave anywhere | Shell + wizard work owns autosave | v0.9.0 |
+| No backup / recovery / .swp-style protection | Lower priority than autosave | v0.9.0 or v0.15.0 |
+| No telemetry / crash reporter | Opt-in infra lands with release CI | v0.15.0 |
+| No CI pipeline anywhere | Lands as a v0.6.0 deliverable | v0.6.0 |
+| No release automation | Lands as a v0.15.0 deliverable | v0.15.0 |
+| Save file format is single JSON | Bundle migration is v0.13.0 | v0.13.0 |
+| No multi-channel audio input | Pit Mixer is v0.10.0 | v0.10.0 |
+| No native file menu | Shell work owns the file menu | v0.9.0 |
+
+---
+
+## See also
+
+<LinkCard
+  title="Ecosystem roadmap"
+  description="Where Pit sits in the broader Stardust ecosystem — Pit → Sheets → speculative future apps."
+  href="/docs/ecosystem/roadmap/"
+/>
+
+<LinkCard
+  title="Setup / Program / Perform"
+  description="The three-mode shell that v0.9.0 wires in, replacing the old Edit/Live model."
+  href="/docs/pit/concepts/setup-program-perform/"
+/>
+
+<LinkCard
+  title="Latency budget"
+  description="Per-API latency targets, hardware recommendations, and what's improving."
+  href="/docs/pit/reliability/latency-budget/"
+/>

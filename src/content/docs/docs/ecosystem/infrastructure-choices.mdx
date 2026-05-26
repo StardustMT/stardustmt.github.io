@@ -1,0 +1,97 @@
+---
+title: "Infrastructure choices"
+description: "Why Stardust's cloud-side defaults are Cloudflare R2 + Fly.io + Neon + Clerk + Plausible + GlitchTip — and why the architecture stays provider-agnostic."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="v2.0+ context" variant="tip" />
+
+> The app is local-first. The cloud parts are additive. But when cloud parts ship, they have to be cheap to run, easy to self-host, and not lock anyone into a single vendor — including us.
+
+## The default stack
+
+| Concern | Default provider | Why |
+|---|---|---|
+| Object storage | **Cloudflare R2** | Zero egress fees, S3-compatible API, global edge presence |
+| Compute | **Fly.io** | Multi-region deploys, machine images, simple primitives |
+| Database | **Neon Postgres** | Serverless Postgres, branchable databases, generous free tier |
+| Auth | **Clerk** (or **Ory** if self-hosted) | Managed identity with social login, MFA, session management |
+| Analytics | **Plausible** | Privacy-respecting, GDPR-compliant, lightweight |
+| Errors | **GlitchTip** | Open-source Sentry alternative, self-hostable |
+
+These are the **defaults**, not the only options. The marketplace server is open source; running it on AWS or GCP is supported by design.
+
+## Why these, specifically
+
+### Cloudflare R2 (storage)
+
+Marketplace content (patches, SFZ packs, extensions) lives as files. Egress fees on AWS S3 add up fast for a free-tier audience. R2 charges $0 for egress, which makes the "free content stays free" promise economically viable without selling user data to fund it.
+
+S3-compatible API means swapping to S3, B2, or MinIO later is a config change.
+
+### Fly.io (compute)
+
+The marketplace server is a small Rust/TypeScript service. Fly's machine model (long-running VMs with persistent storage) fits better than Lambda-style request-per-handler. Multi-region deploys are first-class — a community-share-hub user in Sydney shouldn't wait on a US-east round-trip.
+
+### Neon Postgres (database)
+
+Marketplace catalog, user accounts, licenses, ratings — small-data Postgres workloads. Neon's branchable databases make CI testing painless; the serverless model means dev environments cost ~nothing.
+
+### Clerk or Ory (auth)
+
+Auth is famously hard to get right. Clerk handles social login, MFA, sessions, and the boring compliance bits. Ory is the self-hostable equivalent for private deployments.
+
+Stardust never *requires* an account to use the app — auth only kicks in for marketplace-side actions (purchase, publish, rate).
+
+### Plausible (analytics)
+
+Cookieless, GDPR-compliant, single dashboard. We want to know how many people open the marketplace and what they search for; we don't want to track them across the internet. Plausible fits the privacy posture.
+
+### GlitchTip (errors)
+
+Sentry-API-compatible, AGPL-licensed, self-hostable. Crash reports come in from the v0.15.0 opt-in crash reporter; running our own GlitchTip means we keep that data.
+
+## Why provider-agnostic matters
+
+Three reasons:
+
+1. **Self-hosting.** A theatre company running a private marketplace doesn't have to adopt our cloud bill. They run it on whatever they already have.
+2. **Vendor risk.** Any one of the above could change pricing, get acquired, or shut down. The architecture survives any single provider going away.
+3. **Open-source ethos.** Hard-coding "Stardust runs on Cloudflare" turns the project into a Cloudflare promotional vehicle. We use them because they're the best fit *right now*, not as a commitment.
+
+## What about AWS or GCP?
+
+Both are supported by the architecture. The user running this workspace is AWS-certified — operating Stardust's cloud side on AWS would be straightforward. The reason we don't default there:
+
+- AWS egress is expensive enough to threaten "free content stays free"
+- Managed services on AWS are more configuration-heavy than the defaults above
+- The default stack costs an order of magnitude less to run for low-volume workloads
+
+For a self-hosted enterprise instance, AWS or GCP is often the right answer. The catalog server, license server, and content delivery can each be swapped independently.
+
+## Cost shape (rough order-of-magnitude)
+
+For a v2.0+ community share hub with ~5,000 monthly active users downloading free content:
+
+- Storage: tens of dollars / month (R2)
+- Compute: tens of dollars / month (Fly.io machines)
+- Database: free tier on Neon
+- Auth: free / cheap (Clerk's free tier)
+- Total: **~$50–$150/month** to operate the bridge marketplace at this scale
+
+If the paid marketplace launches and grows: costs scale with usage, but MoR fees and content payouts dominate the budget, not infrastructure.
+
+## What's NOT in the stack
+
+- **No proprietary database lock-in.** Postgres is portable.
+- **No serverless-only patterns.** Long-running connections, websockets, and background jobs work the same as on dedicated servers.
+- **No Cloudflare Workers as the primary compute.** Cloudflare R2 is great; Workers' execution model is too constrained for the API server. (Workers can play a CDN/edge role.)
+- **No analytics that profile individual users.** Aggregate-only, opt-in.
+- **No tracking pixels** anywhere in the app.
+
+## Related pages
+
+- [Marketplace architecture](/docs/ecosystem/marketplace-architecture/)
+- [Ecosystem roadmap](/docs/ecosystem/roadmap/)
+- [Principles](/docs/ecosystem/principles/)

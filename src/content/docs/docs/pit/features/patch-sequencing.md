@@ -5,6 +5,8 @@ description: "Each Song in Stardust contains an ordered list of Patches that the
 
 > Walk through an ordered list of patches in a Song, advancing with a footswitch. Zero stuck notes. Instant switching.
 
+**Status:** Core Show / Song / Patch model shipped in v0.3.0; engine-from-patch in v0.4.0; always-on engine in v0.4.1; multi-plugin chain hosting in v0.5.0. Per-patch transition refinements (warm-pool, sub-block boundary advance) land alongside v0.7.0 sandboxing.
+
 ## What it does
 
 Each Song in Stardust contains an **ordered list of Patches** that the keyboardist advances through during the performance. Press the footswitch → next patch loads instantly with no clicks, pops, or stuck notes from the previous patch.

@@ -1,0 +1,118 @@
+---
+title: "Patch library"
+description: "Every patch in Stardust is a reference to a library entry. The data model unification that makes reuse, sharing, and the marketplace possible."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="Planned · v0.10.0" variant="note" />
+
+> A patch in Stardust is never inline. It's always a reference to a library entry. This is the data model unification that the marketplace, sharing hub, and collaboration features all rest on.
+
+## The model
+
+In other live-performance hosts, a patch is a struct that lives inside the show file. If you want the same patch in two songs, you copy-paste it. If you fix a bug in one copy, the other diverges.
+
+Stardust takes a different approach: **every patch is a reference to a library entry.** Songs hold an ordered list of references; the actual patch graph lives once, in a library entry. Edits to the library entry propagate to every reference. Copying is intentional, not default.
+
+```
+Library entry (the source of truth)
+  ↑ referenced by
+Song instance #1 (carries reference + per-instance overrides)
+Song instance #2 (carries reference + per-instance overrides)
+```
+
+## Scope
+
+Each library entry has a single `scope` field with one of two values:
+
+- **`show`** — the library entry lives inside this show file only. Travels with the show.
+- **`global`** — the entry lives in the user's global library. Available to every show on this machine.
+
+When a show is shared (zip export, or v2.0+ collaboration), global entries it references are **snapshot-bundled** so the recipient sees them even without the source library.
+
+## Reference overrides
+
+A reference carries the library entry's graph as-is plus a per-instance **override block**. The override block has two tiers:
+
+### Basic overrides (cheap to set, common)
+
+- `name` — what the instance is called in this song
+- `notes` — instance-specific show notes
+- `tempo` — overrides the patch's default tempo
+- `transpose` — overrides the patch's transpose value
+- `trim` — per-instance gain trim (dB)
+- `color` — UI color tag
+- `tags` — searchable tag list
+
+### Advanced overrides (powerful, less common)
+
+- `midiChannelOffset` — shift incoming MIDI by N channels
+- `busRoutingOverride` — send to a different bus than the patch default
+- `pluginParamOverrides` — per-plugin parameter values
+- `fxBypass` — list of FX nodes bypassed for this instance
+- `onEnterTriggers` / `onExitTriggers` — fire commands when this patch becomes active / leaves
+- `customCssClass` — for Perform-mode widget styling
+
+## Graph edits trigger merge UI
+
+If you edit the graph of a library entry that's referenced by multiple song instances, you get a **merge dialog** when you save:
+
+| Instance | Action |
+|---|---|
+| Hamilton — Helpless | ☑ Update to new graph |
+| Hamilton — Wait For It | ☐ Keep current graph (creates an orphan snapshot) |
+| Hadestown — Way Down Hadestown | ⓘ Three-way merge (instance had its own override conflicts) |
+
+The default action for each row is "update." You explicitly opt out per-instance for any case where the new graph is wrong for that instance.
+
+## Orphan handling
+
+If a library entry is deleted (or the global entry referenced by a show isn't on this machine), references become **orphans**:
+
+- The reference freezes the **last-known graph** as an `orphan.snapshot` inside the song
+- A banner appears on the affected patch:
+  > *This patch's library entry is missing. Showing snapshot from last known state.*
+- Three actions:
+  - **Re-link** — point this reference at a different library entry
+  - **Save as new** — promote the snapshot into a new library entry
+  - **Keep as orphan** — leave it frozen indefinitely
+
+Orphans never break a show. The snapshot stays playable.
+
+## Promoting and demoting scope
+
+- A `show` entry can be **promoted to `global`** — it leaves the show file and lives in the global library; the show reference now points at the global one
+- A `global` entry can be **demoted to `show`** — it's copied into the show file and the reference is rewritten
+
+Both are explicit user actions in the library panel.
+
+## How this enables the marketplace
+
+A v1.x marketplace patch is just a library entry with extra metadata (author, license, version, install source). Installing a patch from the marketplace creates a new `global` library entry; every show that uses it carries a reference. Marketplace updates are propagated to every show automatically.
+
+This also enables the v1.x **community share hub** — anonymous sharing of single library entries.
+
+## What ships in v0.10.0
+
+- All-patches-as-references data model
+- `show` / `global` scope
+- Basic + Advanced overrides
+- Graph-edit merge dialog
+- Orphan snapshot + banner + re-link/save-new/keep flow
+- Promote / demote actions
+- A library panel UI on the left side of the Program-mode outline
+
+## What's deferred
+
+- **Marketplace integration** — v1.x
+- **Community share hub** — v1.x
+- **Plugin-bundle install** that auto-creates library entries — v2.0+
+- **Cross-show search** for library entries — v1.x
+
+## Related pages
+
+- [Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)
+- [Cascading settings](/docs/pit/concepts/cascading-settings/)
+- [Community sharing](/docs/pit/features/community-sharing/)
+- [Marketplace](/docs/pit/features/marketplace/)

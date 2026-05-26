@@ -1,0 +1,125 @@
+---
+title: "Screen inventory"
+description: "Every screen, modal, panel, and floating window in Pit — with its target version and where it lives in the shell."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+A reference list of every distinct UI surface in Pit. Use this to size visual work, plan Storybook stories, or trace where a feature lives. Surfaces are grouped by **shell location** — the mode or window type that hosts them.
+
+> Storybook is the design-iteration surface for these screens. Every UI feature gets a Storybook story before functional wiring per the [Storybook-first](https://github.com/StardustMT/stardust-workspace/blob/main/CLAUDE.md) rule.
+
+## Pre-shell
+
+Screens shown before the three-mode shell takes over.
+
+| Surface | Type | Version | Notes |
+|---|---|---|---|
+| Splash | Full screen | <Badge text="v0.9.0" variant="note" /> | Recent shows + New Show + Open Show + "what's new" panel |
+| New Show wizard | Modal | <Badge text="v0.9.0" variant="note" /> | 6 steps — see [New Show wizard](/docs/pit/features/new-show-wizard/) |
+| Open Show file picker | OS dialog | <Badge text="v0.3.0" variant="success" /> | Native file dialog, shipped |
+| Save / Save As | OS dialog | <Badge text="v0.3.0" variant="success" /> | Native file dialog, shipped |
+| Update available | Modal | <Badge text="v0.15.0" variant="note" /> | Tauri updater UI |
+| Onboarding tour | Modal sequence | <Badge text="v0.15.0" variant="note" /> | First-launch only, dismissable |
+
+## Setup mode
+
+Rig + show configuration. Screens that live inside Setup's main canvas.
+
+| Surface | Version | Notes |
+|---|---|---|
+| Show settings | <Badge text="v0.9.0" variant="note" /> | Metadata, Production / Source / Distribution, autosave |
+| Audio I/O | <Badge text="v0.2.0" variant="success" /> | Shipped — extended in v0.6.0 with WASAPI/ASIO |
+| MIDI devices | <Badge text="v0.6.0" variant="caution" /> | Per-device labeling, hardware MIDI binding |
+| Rig components | <Badge text="v0.6.0" variant="caution" /> | Keyboards, footswitches, expression pedals, button/switch components |
+| Buses | <Badge text="v0.8.0" variant="note" /> | Main mix, IEM, click bus, conductor bus, custom |
+| Plugin scan | <Badge text="v0.6.0" variant="caution" /> | Re-scan trigger, cache state, requirements report |
+
+## Program mode
+
+The show-authoring canvas. The selected outline item determines what's shown.
+
+| Surface | Selection | Version | Notes |
+|---|---|---|---|
+| Outline | Always visible (left) | <Badge text="v0.3.0" variant="success" /> | Show → songs → patches → library |
+| Patch graph editor | Patch selected | <Badge text="v0.5.0" variant="success" /> | Multi-plugin chain hosting (shipped) |
+| Song settings | Song selected | <Badge text="v0.9.0" variant="note" /> | Sub-tabs: Settings / Click / Backing / Patches |
+| Library entry editor | Library entry selected | <Badge text="v0.10.0" variant="note" /> | Patch-as-reference data model |
+| Click track editor | Song's Click tab | <Badge text="v0.12.0" variant="note" /> | Vamps, codas, cue points, rits, ralls |
+| Backing track editor | Song's Backing tab | <Badge text="v0.13.0" variant="note" /> | Track list, transport, cue points |
+| Layout editor | Layout chosen | <Badge text="v0.11.0" variant="note" /> | Grid editor, widget palette |
+| Rig component widget editor | Component selected | <Badge text="v0.10.0" variant="note" /> | Compound widget appearance |
+| Inspector | Right side, contextual | <Badge text="v0.3.0" variant="success" /> | Properties of current selection (shipped, grows per version) |
+| Pit Mixer | Dedicated surface | <Badge text="v0.10.0" variant="note" /> | Multi-channel audio input mixer |
+| Balance tool | Dedicated surface | <Badge text="v0.12.0" variant="note" /> | LUFS measurement, A/B compare, trim suggestions |
+| Pre-show validation dashboard | Dedicated surface | <Badge text="v0.8.0" variant="note" /> | Becomes a Live entry gate in v0.11.0 |
+
+## Perform mode
+
+Read-mostly runtime view. Composed entirely of user-placed widgets.
+
+| Surface | Version | Notes |
+|---|---|---|
+| Perform canvas | <Badge text="v0.11.0" variant="note" /> | Grid of widgets per the chosen layout |
+| Live fullscreen | <Badge text="v0.11.0" variant="note" /> | Hides menu bar + chrome |
+| Layout template picker | <Badge text="v0.11.0" variant="note" /> | Blank / Minimal / Cabaret / MD Console |
+
+## Floating windows
+
+Separate OS windows; can move to second monitors.
+
+| Window | Version | Notes |
+|---|---|---|
+| Settings | <Badge text="v0.9.0" variant="note" /> | Per-app preferences, not show settings |
+| Plugin GUI | <Badge text="v0.6.0" variant="caution" /> | One per plugin, embedded via CLAP GUI extension |
+| Conductor cam pop-out | <Badge text="v0.11.0" variant="note" /> | For second-monitor display |
+| Parameter favorites pop-out | <Badge text="v0.11.0" variant="note" /> | Touch-target parameter widgets |
+
+## Modals
+
+Transient dialogs.
+
+| Modal | Version | Notes |
+|---|---|---|
+| New Show wizard | <Badge text="v0.9.0" variant="note" /> | 6-step show creator |
+| Close blocker (unsaved changes) | <Badge text="v0.9.0" variant="note" /> | "Save / Discard / Cancel" |
+| Merge graph edits | <Badge text="v0.10.0" variant="note" /> | Per-instance update/keep/three-way-merge |
+| Orphan reattach | <Badge text="v0.10.0" variant="note" /> | Re-link / save-new / keep-snapshot for missing library entries |
+| Plugin requirements report | <Badge text="v0.7.0" variant="note" /> | Missing-plugin list with "find this plugin" links |
+| Pre-show validation gate | <Badge text="v0.11.0" variant="note" /> | Blocks Live entry; overrideable |
+| Crash reporter consent | <Badge text="v0.15.0" variant="note" /> | First-launch opt-in |
+| Telemetry consent | <Badge text="v0.15.0" variant="note" /> | First-launch opt-in |
+| Theme save / share | <Badge text="v0.15.0" variant="note" /> | Theme editor output |
+| Extension install permission | <Badge text="v0.15.0" variant="note" /> | Capability consent UI |
+
+## Diagnostic / dev surfaces
+
+Visible only when explicitly opened. Not part of the normal performer workflow.
+
+| Surface | Version | Notes |
+|---|---|---|
+| Latency measurement tool | <Badge text="v0.6.0" variant="caution" /> | Loopback round-trip measurement |
+| Latency budget breakdown | <Badge text="v0.15.0" variant="note" /> | Per-API timings; release-engineering deliverable |
+| Engine monitor (embedded) | <Badge text="v0.11.0" variant="note" /> | Widget in Perform mode |
+| Plugin scan report | <Badge text="v0.6.0" variant="caution" /> | What was found, what cached, what's missing |
+
+## Native menus
+
+The OS file menu structure. Mode switches are **not** in the menu bar.
+
+| Menu | Items | Version |
+|---|---|---|
+| File | New, Open, Open Recent, Save, Save As, Import, Export, Quit | <Badge text="v0.9.0" variant="note" /> |
+| Edit | Undo, Redo, Cut, Copy, Paste, Select All, Preferences | <Badge text="v0.9.0" variant="note" /> |
+| View | Zoom In/Out, Toggle Inspector, Toggle Outline | <Badge text="v0.9.0" variant="note" /> |
+| Window | Settings, Plugin GUI list, Conductor cam, Bring all to front | <Badge text="v0.9.0" variant="note" /> |
+| Help | Documentation, Report a bug, About Stardust Pit | <Badge text="v0.9.0" variant="note" /> |
+
+## Legend
+
+- <Badge text="Shipped" variant="success" /> — tagged on GitHub, in current builds
+- <Badge text="v0.6.0" variant="caution" /> — next version, actively scoped
+- <Badge text="vX.Y.Z" variant="note" /> — planned, target version assigned
+- <Badge text="v2.0+" variant="tip" /> — post-1.0 backlog
+
+For the version-by-version exit criteria, see the [Pit roadmap](/docs/pit/roadmap/).

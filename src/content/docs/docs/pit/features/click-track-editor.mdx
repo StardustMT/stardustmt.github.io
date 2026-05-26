@@ -1,0 +1,88 @@
+---
+title: "Click track editor"
+description: "Bar-by-bar tempo authoring with vamps, repeats, codas, cue points, rits, and ralls. Always-live, no bake step."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="Planned · v0.12.0" variant="note" />
+
+> The click track is a structured artifact, not a constant BPM value. You need vamps. You need rits. You need a coda jump. You need to scrub. The editor treats the click track as the first-class authoring surface it is.
+
+## What it is
+
+A dedicated editor in Program mode that lives on the song's Click sub-tab. The output is the song's tempo map, which the engine consumes to drive the click bus + MIDI clock send + any vamp-driven transport behavior.
+
+**No bake step.** Edits are live; play and edit in the same surface.
+
+## Tempo authoring
+
+Three ways to set tempo:
+
+1. **Numeric BPM per bar** — 120, 144, 96, etc.
+2. **Note=BPM notation** — `♩=120`, `♪=180`. For compound or unusual time signatures.
+3. **Musical terms** — "Andante," "Allegro," "Moderato." Mapped to BPM ranges with manual override.
+
+Each bar can carry a different tempo. The transition between two bars uses a curve (see below).
+
+## Tempo curve graph
+
+A continuous tempo-vs-bar visualization. Points are draggable. Between points, the curve uses one of:
+
+- **Linear** — straight ramp between tempos
+- **Instant** — tempo jumps at the bar boundary
+- **Ease-in / ease-out** — accelerating/decelerating curves
+- **Manual** — drawable freeform curve for unusual rallentandos
+
+Right-click a region → "Apply rit" / "Apply rall" pre-fills a curve.
+
+## Vamps, repeats, codas
+
+- **Vamp region** — a marked region of time that loops indefinitely until a footswitch "end vamp" signal fires. The transport completes the current loop, then proceeds past the end marker.
+- **Repeat region** — a marked region that loops a specified number of times, then proceeds.
+- **Coda** — a `D.S. al Coda` / `Coda` jump pair. The transport follows the jump on a configured trigger (a specific cue point, or a footswitch).
+
+All three are encoded as **marker pairs** in the timeline. They're visible at all zoom levels.
+
+## Cue points
+
+Named timeline anchors. Used by:
+
+- The transport's "jump to cue" action
+- The cue system for fire-on-cue MIDI events
+- The backing tracks' transport sync (v0.13.0)
+- The conductor cam overlay (v0.11.0) — shows current cue point
+
+## Rits and ralls via region selection
+
+Select a bar range → right-click → **"Apply rit"** / **"Apply rall"** → choose start/end tempo, curve shape, optional resolution to the next steady tempo. The editor inserts the right curve points automatically.
+
+## Audition + playhead scrub
+
+A playhead drags through the timeline; release to play from that point. Audition plays the click + (if a backing track is loaded) the audio. Reverse scrubbing supported for finding edit points.
+
+## SMF Type 1 export / import
+
+The click track exports to **Standard MIDI File Type 1**:
+
+- Tempo track with one tempo-change event per curve point
+- Bar markers as text events
+- Cue points as marker events
+- Vamps / repeats / codas encoded via **our own marker-naming convention** — `[stardust:vamp-start]`, `[stardust:vamp-end]`, `[stardust:coda-jump-to:X]`. DAWs see these as text markers; they won't loop, but the data round-trips.
+
+Import is the inverse: read an SMF Type 1, parse tempo events into curve points, parse markers into bars / cues / vamps where the naming convention matches.
+
+This makes Stardust click tracks **interoperable** with any DAW that handles SMF Type 1.
+
+## What the editor doesn't do
+
+- **No time signature changes mid-bar.** Time signatures live on bar boundaries.
+- **No notation rendering.** Stardust is not a notation app; sheet music belongs in forScore or its eventual replacement, [Sheets](/docs/sheets/).
+- **No groove templates** for v1.0. Quantize-to-template lives in v1.x backlog.
+
+## Related pages
+
+- [Click track](/docs/pit/features/click-track/) (the engine + bus side)
+- [Balance tool](/docs/pit/features/balance-tool/)
+- [Backing tracks](/docs/pit/features/backing-tracks/)
+- [Cue system](/docs/pit/features/cue-system/)

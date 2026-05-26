@@ -14,6 +14,7 @@ export default defineConfig({
         "Open-source, cross-platform live-performance tools for musical theatre.",
       components: {
         SiteTitle: "./src/components/SiteTitle.astro",
+        Header: "./src/components/Header.astro",
       },
       social: {
         github: "https://github.com/StardustMT",
@@ -43,7 +44,7 @@ export default defineConfig({
               items: [
                 { label: "Shows, Songs, and Patches", link: "/docs/pit/concepts/shows-songs-patches/" },
                 { label: "Cascading settings", link: "/docs/pit/concepts/cascading-settings/" },
-                { label: "Edit Mode vs Live Mode", link: "/docs/pit/concepts/edit-vs-live/" },
+                { label: "Setup, Program, and Perform", link: "/docs/pit/concepts/setup-program-perform/" },
               ],
             },
             {
@@ -62,6 +63,7 @@ export default defineConfig({
               collapsed: true,
               autogenerate: { directory: "docs/pit/features" },
             },
+            { label: "Screens", link: "/docs/pit/screens/" },
             { label: "Roadmap", link: "/docs/pit/roadmap/" },
             { label: "Comparison", link: "/docs/pit/comparison/" },
           ],

@@ -26,7 +26,7 @@ Practically every setting:
 - **Audio**: device, buffer size, sample rate, output routing
 - **MIDI**: input devices, channel routing, virtual MIDI outputs
 - **Device profiles**: keyboard model, attached pedals
-- **UI layout**: which widgets appear in Live Mode and where
+- **UI layout**: which widgets appear in Perform mode and where
 - **Master settings**: master volume, master reverb send
 - **Click track**: tempo, time signature, count-in
 - **Transpose**: pitch shift
@@ -90,5 +90,5 @@ For contributors:
 ## Related pages
 
 - [Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)
-- [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
+- [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
 - Data Model

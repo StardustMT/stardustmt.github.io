@@ -5,7 +5,7 @@ description: "Target version: v0.4 (moved up from v0.5 due to demand)"
 
 > Record a sound, auto-map it across the keyboard, save as a Stardust Patch. Use it for show-specific custom sounds.
 
-**Target version:** v0.4 (moved up from v0.5 due to demand)
+**Status:** v2.0+ — builds on the v0.14.0 native SFZ player. A bundled GM piano SFZ ships in v0.14.0; full record/import/auto-map sampler is post-v1.0.
 
 ## What it does
 

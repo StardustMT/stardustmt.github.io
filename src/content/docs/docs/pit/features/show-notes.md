@@ -5,11 +5,11 @@ description: "Target version: v0.5"
 
 > Markdown-rendered notes per Song and per Patch — chord charts, lyrics, conductor cues, anything you need at a glance.
 
-**Target version:** v0.5
+**Status:** Notes widget (notepad + custom markdown) lands in v0.11.0 as part of the widget catalog. Storage model is part of the v0.10.0 patch library work.
 
 ## What it does
 
-Each Song and each Patch can have notes attached, rendered as markdown in a dedicated pane in Live Mode.
+Each Song and each Patch can have notes attached, rendered as markdown in a dedicated pane in Perform mode.
 
 Typical contents:
 - **Chord chart** — chord changes for the Song
@@ -60,11 +60,11 @@ Notes are stored as markdown strings in the Show JSON:
 
 ## In-app editing
 
-Edit Mode has a dedicated **Show Notes editor** dialog with markdown preview alongside source. Quick-save, autosaves on close.
+Program mode has a dedicated **Show Notes editor** dialog with markdown preview alongside source. Quick-save, autosaves on close.
 
 For longer notes, an external file reference is supported (v1.0+): `notes_file: "hamilton-song-4-notes.md"` loads from a sidecar file.
 
-## Live Mode display
+## Perform mode display
 
 The `<NotesPane>` widget shows current notes. Resizable from the Layout tab. Scroll wheel scrolls the content for longer notes.
 
@@ -84,4 +84,4 @@ See [forScore Integration](/docs/pit/features/forscore-integration/) for the pro
 
 - [forScore Integration](/docs/pit/features/forscore-integration/)
 - Widget Registry
-- [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
+- [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)

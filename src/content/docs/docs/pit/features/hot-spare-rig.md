@@ -5,7 +5,7 @@ description: "Target version: v2.0+"
 
 > Two Stardust machines wired in parallel. Primary fails, backup takes over via MIDI switch. Standard Broadway MD redundancy.
 
-**Target version:** v2.0+
+**Status:** v2.0+ — LAN-primary, cloud-fallback architecture. Listed in the v2.0+ backlog on the [roadmap](/docs/pit/roadmap/).
 
 ## What it does
 

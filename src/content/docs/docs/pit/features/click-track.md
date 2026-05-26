@@ -5,7 +5,7 @@ description: "Target version: v0.5"
 
 > Per-Song click with configurable BPM, time signature, count-in. Standard musical-theatre / live-band tempo coordination.
 
-**Target version:** v0.5
+**Status:** Engine + dedicated bus output in v0.8.0; full bar-by-bar [click track editor](/docs/pit/features/click-track-editor/) in v0.12.0.
 
 ## What it does
 

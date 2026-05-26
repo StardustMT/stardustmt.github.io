@@ -5,7 +5,7 @@ description: "Target version: v0.5"
 
 > Send MIDI commands from Stardust to forScore (iOS sheet-music app) for automatic page turns synced to Patch changes.
 
-**Target version:** v0.5
+**Status:** Planned — leans on the v0.8.0 MIDI clock send + [button/switch rig component](/docs/pit/features/button-switch-component/) for cue-driven page-turn messages.
 
 ## What it does
 

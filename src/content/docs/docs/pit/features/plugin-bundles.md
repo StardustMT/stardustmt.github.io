@@ -3,8 +3,7 @@ title: "Plugin bundles + installer"
 description: "Curated bundles of open-source VST3 / CLAP plugins, installed at the push of a button. Get a working theatre rig out of the box; expand into specialist packs (synth, guitar, orchestral) when you need to."
 ---
 
-> [!NOTE]
-> **Status: ⚪ Planned for v0.5+.** This is post-engine, post-data-model, post-MT-features work — once Pit is genuinely usable, the friction of "find and install a working set of plugins" becomes the main onboarding obstacle. Solving it is its own substantial feature.
+**Status:** v2.0+ — gated on the v2.0+ [marketplace](/docs/ecosystem/marketplace-architecture/) and one-click-installer infrastructure. The v0.14.0 native SFZ player ships a bundled GM piano so first-launch isn't silent in the meantime.
 
 A fresh install of Pit is more useful with a working set of plugins already installed than with an empty plugin list and a Google search. The plan is to ship a **curated theatre-ready toolkit** and provide a **one-click installer** for additional packs.
 

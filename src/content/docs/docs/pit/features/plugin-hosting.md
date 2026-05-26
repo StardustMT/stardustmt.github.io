@@ -5,6 +5,8 @@ description: "Stardust hosts third-party audio plugins to provide the actual sou
 
 > Host VST3 and CLAP plugins, in sandboxed child processes so a crashing plugin never kills the show.
 
+**Status:** CLAP host shipped in v0.2.0; multi-plugin chain hosting (in-process) in v0.5.0. Out-of-process sandboxing (the reliability commitment) is v0.7.0 — [ADR-0002](https://github.com/StardustMT/stardust-workspace/blob/main/docs/adr/0002-out-of-process-plugin-sandboxing.md). VST3 + AU are v1.x or v2.0+.
+
 ## What it does
 
 Stardust hosts third-party audio plugins to provide the actual sounds. You drag a plugin (e.g. Spitfire BBC SO Discover, Surge XT, MuseSounds Strings) into a Patch's VST chain, configure its parameters, and the plugin processes incoming MIDI into output audio. Multiple plugins per Patch are supported — for layered sounds, splits, or effects chains.

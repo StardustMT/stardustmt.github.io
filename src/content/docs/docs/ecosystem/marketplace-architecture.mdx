@@ -1,0 +1,136 @@
+---
+title: "Marketplace architecture"
+description: "How Stardust's eventual paid + free marketplace works — Merchant of Record, self-hostable server, AGPL-compatible, never gates the app."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="v2.0+" variant="tip" />
+
+> This is a **vision document** describing how the marketplace works when it ships post-1.0. Architectural decisions in v1.0 (data model, library scope, extension API) are made with this in mind so we don't have to break them when it lands.
+
+## Hard constraints
+
+These are **non-negotiable** — they survive any architectural revision:
+
+1. **The app works fully without the marketplace.** No login required for the app itself. No connectivity required to load shows, load patches, or play.
+2. **Anonymous downloads stay available.** Free content can always be fetched without an account.
+3. **No mandatory cloud lock-in.** Users own their library data; the marketplace is a distribution channel, not a hostage situation.
+4. **Self-hostable.** A team or community can run their own instance of the marketplace server. The protocol is open.
+5. **AGPL-compatible.** The marketplace server (and Stardust itself) must remain AGPL-licensable — including paid content distribution. Where a Merchant-of-Record sits, it sits cleanly.
+
+## Merchant of Record
+
+Stardust does not build payment infrastructure from scratch. Payments are processed by a **Merchant of Record** (MoR) — a third-party service that handles:
+
+- Credit card processing
+- Tax compliance (VAT, sales tax, digital services tax)
+- Chargebacks and refunds
+- Cross-border regulatory compliance
+- Anti-fraud
+
+Candidate providers:
+
+- **[Lemon Squeezy](https://www.lemonsqueezy.com/)** — strong indie-friendly terms, mature API
+- **[Polar.sh](https://polar.sh)** — open-source-aligned, growing
+- **[Paddle](https://paddle.com)** — bigger, more enterprise, but solid MoR
+
+The MoR holds the payment flow; Stardust holds the content delivery. Sellers get paid by the MoR (minus fees); buyers get a license token from the MoR that the Stardust server redeems against the content.
+
+## The three roles
+
+```
+Buyer ←──────── Stardust marketplace server ────────→ Seller
+   ↑                       ↑                              ↑
+   │ pays                  │ license + delivery           │ uploads + receives payout
+   ↓                       ↓                              ↓
+       Merchant of Record (MoR)
+```
+
+- **Buyer** — a Stardust user installing paid or free content
+- **Seller** — a content author publishing patches, extensions, plugin bundles, click tracks, etc.
+- **MoR** — handles money + tax
+- **Stardust marketplace server** — handles content, licenses, search, ratings
+
+## What's sold
+
+The marketplace is a distribution surface for **library entries** (per [Patch library](/docs/pit/features/patch-library/)) and **extensions**:
+
+| Asset | Free | Paid |
+|---|---|---|
+| **Patches** — single library entries | ✓ | ✓ |
+| **Patch packs** — curated collections | ✓ | ✓ |
+| **Show templates** — full `.stardustshow` bundles for common works | ✓ | ✓ |
+| **Click tracks** — for public-domain works | ✓ | ✓ |
+| **SFZ packs** — sample-based instruments via v0.14.0's native SFZ player | ✓ | ✓ |
+| **Extensions** — TS / WASM bundles | ✓ | ✓ |
+| **Plugin bundles** — recipes that install groups of free plugins | ✓ | rarely |
+
+Paid content can be one-time-purchase or subscription (typically annual, for content that gets updated like maintained click tracks for active touring productions).
+
+## License model
+
+Each paid purchase produces a **license token** held in the user's Stardust account. The token authorizes:
+
+- Download of the asset
+- Use of the asset across all the user's installs
+- Receipt of updates (within the subscription window if it's subscription-based)
+
+License tokens are stored in the user's Stardust account *and* cached locally so the app keeps working without network access. The marketplace server only needs to be reachable for purchase, install, and update — not for *running* content that's already installed.
+
+## Data flow on purchase
+
+1. Buyer clicks "Purchase" in the marketplace UI inside Pit
+2. Pit opens the MoR's checkout (in-app webview or external browser)
+3. Buyer pays the MoR
+4. MoR posts a success webhook to the Stardust marketplace server
+5. Stardust server issues a license token to the buyer's account
+6. Pit fetches the asset, validates the license, installs to the global library
+
+## Self-hosted instances
+
+The marketplace server is **open source** under AGPL. A theatre company, conservatory, or content distributor can run their own instance — useful for:
+
+- Private content (commissioned shows, in-house patch libraries)
+- Regional content (a country-specific show ecosystem)
+- Pre-public-launch testing
+
+Self-hosted instances can federate with the canonical Stardust marketplace (v2.0+) so content is searchable across instances; or they can stay private.
+
+## Community share hub (the bridge)
+
+Before the full marketplace, a **community share hub** ships in v1.x as a stripped-down distribution layer:
+
+- Free content only
+- Anonymous downloads
+- Per-asset GitHub-style upvotes
+- No MoR, no licensing, no accounts required to download
+
+This validates the content-delivery side without the payment plumbing. The full marketplace builds on top of it.
+
+## Cloud provider stack (provisional)
+
+The marketplace server's provisional infrastructure:
+
+- **Object storage** — Cloudflare R2 (cheap egress, S3-compatible)
+- **Compute** — Fly.io (lives close to users, simple deploy)
+- **Database** — Neon Postgres (managed, branchable)
+- **Auth** — Clerk or Ory (managed identity)
+- **Analytics** — Plausible (privacy-respecting)
+- **Errors** — GlitchTip (self-hostable Sentry alternative)
+
+Architecture is provider-agnostic — anyone running their own instance can swap to AWS, GCP, or anything else. See [Infrastructure choices](/docs/ecosystem/infrastructure-choices/).
+
+## What this is not
+
+- **Not an exclusivity deal.** Sellers can list the same content elsewhere.
+- **Not a DRM system.** Content is downloaded as files; copying is technically possible. Licensing is enforceable but not bulletproof — and we don't pretend otherwise.
+- **Not a curated-only walled garden.** Anyone can publish. Curation surfaces (editor's picks, featured collections) layer on top.
+- **Not an enterprise CMS.** It's a marketplace, not a content management platform.
+
+## Related pages
+
+- [Patch library](/docs/pit/features/patch-library/) — the data model the marketplace consumes
+- [Community sharing](/docs/pit/features/community-sharing/) — the v1.x bridge
+- [Marketplace](/docs/pit/features/marketplace/) — the consumer-facing surface
+- [Infrastructure choices](/docs/ecosystem/infrastructure-choices/)

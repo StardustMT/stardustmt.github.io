@@ -5,7 +5,7 @@ description: "Target version: v2.0+"
 
 > Multiple Stardust instances on a LAN share Show/Song/Patch position. Keys 1 advances and Keys 2's UI follows.
 
-**Target version:** v2.0+
+**Status:** v2.0+ — depends on CRDT sync foundation (Automerge-backed), which itself is v2.0+.
 
 ## What it does
 

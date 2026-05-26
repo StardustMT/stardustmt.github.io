@@ -1,0 +1,110 @@
+---
+title: "Extension API"
+description: "Hybrid TypeScript + WASM extension surface for adding UI widgets, importers/exporters, custom commands, and hardware controllers. Non-realtime in v1.0."
+---
+
+import { Badge, LinkCard } from '@astrojs/starlight/components';
+
+<Badge text="Planned · v0.15.0" variant="note" />
+
+> An extension API turns the people running on Pit from users into co-authors. Done well, it's how the app outgrows what any one team can build. Done badly, it's how the app eats every reliability promise it ever made.
+
+## The v1.0 commitment
+
+Extension API v1 is **non-realtime**. Extensions can do:
+
+- UI work (widgets, panels, overlays in Perform mode)
+- Importers / exporters (read foreign formats; write foreign formats)
+- Custom commands (bound to rig components, footswitches, Stream Decks)
+- Hardware controllers (USB HID, OSC clients, custom protocols)
+
+Extensions **cannot** do:
+
+- Anything in the audio callback
+- Anything in the realtime MIDI dispatch path
+- Anything that needs guaranteed-bounded latency
+
+The realtime extension surface — custom DSP nodes in the patch graph, sample-accurate MIDI processors — is **v2.0+**. Realtime needs a verified-allocation-free contract; building that on a still-evolving engine model is a trap.
+
+## Hybrid TypeScript + WASM
+
+Extensions can be:
+
+| Surface | Language | Use when |
+|---|---|---|
+| **TypeScript** | TS / JS runtime in the webview | UI widgets, importers/exporters, commands. The fast path. |
+| **WASM** | Any language that compiles to WASM (Rust, Go, AssemblyScript, C++) | Compute-heavy: format parsing, MIDI analysis, custom controller protocols |
+
+A single extension can use both — TS for UI + WASM for the heavy lifting.
+
+## Sandboxing
+
+All extensions run **sandboxed by default**:
+
+- No native module loading (rules out the crash class)
+- No raw filesystem access — only through capability-scoped APIs (read the show, write to a designated assets dir, etc.)
+- No raw network access — only through the extension's declared capabilities
+- No process spawning
+- Resource quotas (memory, CPU time) enforced
+
+This rules out a class of extensions that exist in some hosts (native binary plugins, full filesystem traversal) — and rules in cross-platform portability without per-platform native module headaches.
+
+## What an extension looks like
+
+A `.stardustext` bundle (a folder, like a show):
+
+```
+my-extension.stardustext/
+  manifest.json         # name, version, capabilities, entry points
+  ui/                   # TS source
+  wasm/                 # optional compiled WASM
+  assets/               # icons, images
+```
+
+The manifest declares:
+
+- **Capabilities** the extension needs (`read-show`, `write-show`, `network:specific-host`, `usb-hid`, etc.)
+- **Entry points** — widget IDs, command IDs, importer/exporter MIME types
+- **Compatibility** — minimum Stardust version
+
+On install, Stardust shows the user the requested capabilities and asks for explicit consent.
+
+## Bundled example: Stream Deck
+
+The v0.15.0 release ships **Stream Deck support as a bundled extension** — proving the API by using it.
+
+The extension:
+
+- Discovers connected Elgato Stream Deck devices via USB HID
+- Renders button labels + icons to the deck
+- Sends button presses as actions to the engine (bound to button/switch rig components)
+- Updates button state reactively (mute toggles light up, current patch highlights, etc.)
+
+It's a real, useful extension that exercises every API surface — and it ships with the app. If the Stream Deck integration breaks, the extension API broke; that's the test.
+
+## ADR-0007
+
+The extension API architecture decision lives in **ADR-0007**, written as part of v0.15.0. Topics:
+
+- Sandbox model and capability declaration
+- TS ↔ WASM bridge contract
+- Versioning + back-compat policy
+- Marketplace integration touch points (v1.x)
+
+## What's deferred
+
+- **Realtime extension surface** (custom DSP / graph nodes) — v2.0+
+- **Bidirectional extension marketplace** with paid distribution — v1.x
+- **Native module plugins** — never (incompatible with sandboxing)
+
+## Related pages
+
+<LinkCard
+  title="Stream Deck (via extension API)"
+  description="The bundled example extension that ships with v0.15.0."
+  href="/docs/pit/features/extension-api/"
+/>
+
+- [Plugin hosting](/docs/pit/features/plugin-hosting/)
+- [Custom sampler](/docs/pit/features/custom-sampler/) (post-v1 extension territory)
+- [Marketplace](/docs/pit/features/marketplace/) (post-v1, leans on the extension model)

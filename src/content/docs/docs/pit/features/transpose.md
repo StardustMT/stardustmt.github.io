@@ -5,7 +5,7 @@ description: "Target version: v0.5"
 
 > Pitch shift a Song up or down in semitones. Essential for night-to-night vocal-health adjustments.
 
-**Target version:** v0.5
+**Status:** Engine `transpose` node shipped in v0.5.0; per-patch transpose UI in v0.8.0.
 
 ## What it does
 

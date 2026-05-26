@@ -1,0 +1,100 @@
+---
+title: "Balance tool"
+description: "Measure, compare, and balance every patch in the show by perceptual loudness. LUFS-based, offline render, no speakers required."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="Planned · v0.12.0" variant="note" />
+
+> The patch you spent two hours on at home is 6 LU louder than the patch before it. Half the audience can hear it. Nobody on stage tells you. The balance tool measures it before the audience does.
+
+Mixing a show by ear is hard. Every patch was authored at a different time, sometimes weeks apart, on different reference material, and the result is always slightly uneven. The balance tool turns "is this patch louder than that one?" into a measurement — done offline, no speakers, no late-night-by-yourself second-guessing.
+
+## What it measures
+
+The tool renders each patch through a deterministic **reference sequence**, captures the audio, and runs **ITU-R BS.1770** loudness analysis (via the [`ebur128`](https://crates.io/crates/ebur128) Rust crate). For every patch it produces:
+
+- **Integrated LUFS** — perceptual loudness over the reference sequence
+- **True Peak (dBTP)** — the highest inter-sample peak, in dBFS
+- **Loudness Range (LRA)** — dynamic range across the sequence
+- **Per-instrument-node loudness** — when a patch has multiple instruments mixed, each gets its own LUFS reading
+
+All measurement is **offline render** — patches are run through the engine to a buffer, not to speakers. No noise out of your monitors at 3am.
+
+## Scopes of measurement
+
+<Badge text="Intra-patch" variant="tip" /> Per-instrument-node within a patch — flags one piano sample 4 LU louder than another within the same chain.
+
+<Badge text="Cross-patch" variant="tip" /> Within a song — flags patches inside one song that sit at different perceived levels.
+
+<Badge text="Show-wide audit" variant="tip" /> Across the whole show — produces a sorted list of every patch from quietest to loudest, with the show median as the reference.
+
+## Reference sequences
+
+Loudness depends on what's played. The tool uses three deterministic reference sequences:
+
+| Sequence | Material | When to use |
+|---|---|---|
+| **Sustain** | Two octaves of sustained C major | Pads, strings, organs |
+| **Attack** | Sixteenth-note runs across two octaves | Pianos, plucks, mallets |
+| **Dynamic** | Velocity sweep v40 → v120 + held chord | Anything where velocity response matters |
+
+Each patch is measured against all three. The lower-bound LUFS (quietest measurement) is the patch's "rest" loudness; the upper-bound is its "fullness."
+
+**Velocity normalization for v1.0:** measurements use velocity **v80** consistently. v1.x adds a three-point measurement (v40 / v80 / v120) for full velocity-curve characterization.
+
+## A/B compare
+
+Pick a **reference patch** (typically the show's signature patch — the lead piano, the main pad). Every other patch gets compared against it:
+
+- Δ LUFS — louder / quieter than reference
+- Δ True Peak — peakier / softer-peaked than reference
+- Δ LRA — more / less dynamic than reference
+
+Click any patch → instant audition of reference followed by patch, level-matched, so you can hear the timbre difference without the loudness difference clouding the judgment.
+
+## Trim suggestions
+
+For each patch, the tool computes a **per-patch trim** in dB that would bring it to the show median. Click to apply, or apply all at once, or override manually. Trims are stored as part of the patch's mix-node config — they survive load/save and travel with the show file.
+
+## Tilt EQ per patch
+
+Sometimes a patch isn't *louder* — it's *brighter*, and brightness reads as loudness in a busy mix. The tool surfaces a single **tilt EQ** knob per patch:
+
+- Negative tilt → darken (low shelf up, high shelf down)
+- Positive tilt → brighten (low shelf down, high shelf up)
+
+One knob, perceptually centered. Saved as part of the patch.
+
+## Show-wide audit report
+
+After running the audit, the tool produces a sortable table:
+
+| Patch | Song | LUFS | dBTP | LRA | Δ from median | Suggested trim |
+|---|---|---|---|---|---|---|
+| Strings — Verse | Helpless | -18.2 | -3.1 | 6 | +1.8 | -1.5 dB |
+| Piano — Chorus | Helpless | -22.0 | -5.4 | 8 | -2.0 | +2.0 dB |
+| Brass stab | My Shot | -14.5 | -1.0 | 3 | +5.5 | -5.0 dB |
+| ... | ... | ... | ... | ... | ... | ... |
+
+Any patch ±3 LU from the median is highlighted yellow; ±6 LU is red. The "Apply all suggestions" button trims everything to within 1 LU of the median.
+
+## When to run
+
+- **End of a programming session** — sanity-check what you've just authored
+- **Before tech week** — make sure the show is even-tempered before stage time
+- **After plugin swaps** — sample replacements often change loudness
+- **As part of pre-show validation** in v0.11.0+ — flagged patches surface in the validation dashboard
+
+## What it doesn't do
+
+- **Doesn't run during a show.** Offline only — measurement is a programming tool, not a live monitor.
+- **Doesn't change plugin internals.** Trims and tilts live in the patch's mix node, not in plugin parameters.
+- **Doesn't measure stems/buses.** v1.0 measures patch outputs; multi-bus per-channel loudness analysis is v1.x backlog.
+
+## Related pages
+
+- [Click track editor](/docs/pit/features/click-track-editor/)
+- [Pit Mixer](/docs/pit/features/pit-mixer/)
+- [Latency budget](/docs/pit/reliability/latency-budget/)

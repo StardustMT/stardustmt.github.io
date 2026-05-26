@@ -10,11 +10,11 @@ description: Where Stardust is going at the platform level — Pit's path to 1.0
 
 | Layer | Status |
 |---|---|
-| **Stardust Pit** | 🟢 In active development — v0.1 Foundations |
-| **Stardust Sheets** | ⚪ Design intent only — starts post-Pit v1 |
-| **`stardust-core` shared library** | 🟢 Cargo workspace scaffolded, MPL 2.0, no implementation yet |
+| **Stardust Pit** | 🟢 In active development — **v0.5.0** (multi-plugin chain hosting) shipped; v0.6.0 engine completeness is next |
+| **Stardust Sheets** | ⚪ Design intent only — starts post-Pit v1.0 |
+| **`stardust-core` shared library** | 🟢 v0.5.0 — patch graph, show document, CLAP host, 3-band EQ + StereoChannel, audio/MIDI primitives |
 | **`stardust-workspace` meta-repo** | ✅ Set up with ADRs, justfile, scripts, CLAUDE.md |
-| **`stardust-site` (this site)** | ✅ Live |
+| **`stardustmt.github.io` (this site)** | ✅ Live |
 | Speculative future apps | ⚪ Named, not built |
 
 ## Trajectory
@@ -27,16 +27,22 @@ Two products earning their audience is the gate. The rest of the ecosystem is si
 
 ### Phase 1 — Pit reaches public release (~now → v1.0)
 
-Build Pit until it's reliable enough to use as a daily driver in a professional pit. The version-by-version plan is on the [Pit roadmap](/docs/pit/roadmap/); the headline arc is:
+Build Pit until it's reliable enough to use as a daily driver in a professional pit. The version-by-version plan with exit criteria lives on the [Pit roadmap](/docs/pit/roadmap/); the headline arc is:
 
-- **v0.1 Foundations** *(current)* — repos, wiki → docs migration, Storybook screens, ADR system
-- **v0.2 Vertical slice** — minimum Pit + minimum stardust-core working in tandem
-- **v0.3 Plugin sandboxing + CLAP** — out-of-process plugins, hot-plug resilience
-- **v0.4 Data model + UI** — Show / Song / Patch with the full Edit and Live modes
-- **v0.5 MT features** — click track, transpose, notes, custom sampler, forScore integration
-- **v1.0 Public release** — cross-platform testing matrix, demo shows, public launch
+- **v0.1.0 – v0.5.0** ✅ shipped — Tauri scaffold, patch editor, engine, show document, on-screen MIDI, always-on engine, multi-plugin chain hosting
+- **v0.6.0** *(next)* — Engine completeness: hardware MIDI bindings, plugin GUI hosting, scan caching, PR CI
+- **v0.7.0** — Plugin sandboxing (out-of-process), watchdog, crash recovery, soak tests
+- **v0.8.0** — Transport + MD essentials: per-bar tempo, click bus, MIDI clock send, tap tempo
+- **v0.9.0** — Three-mode shell, splash, New Show wizard, settings window
+- **v0.10.0** — Library data model unification, drawing primitives, Pit Mixer
+- **v0.11.0** — Perform mode + widget catalog + conductor cam
+- **v0.12.0** — Click track editor + LUFS balance tool
+- **v0.13.0** — Backing tracks + `.stardustshow` bundle format + MIDI recording
+- **v0.14.0** — Native SFZ player + bundled GM piano
+- **v0.15.0** — Polish, signed installers, extension API, accessibility audit, tech-debt sweep
+- **v1.0.0** — Open beta → public launch with auto-update
 
-The 1.0 release is the goal. Versions are framed as a release schedule, not as "phases" — every version is a real release with exit criteria, not a planning convenience.
+Versions are framed as a release schedule under semver, not as "phases" — every version is a real release with exit criteria, not a planning convenience.
 
 ### Phase 2 — Sheets starts (post-Pit v1.0)
 

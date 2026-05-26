@@ -5,12 +5,14 @@ description: "MIDI Learn is the interactive way to map physical controls (knobs,
 
 > Click a parameter, move a control, you're mapped.
 
+**Status:** Per-source MIDI binding lands in v0.6.0 (alongside [device profiles](/docs/pit/features/device-profiles/)). Custom-curve editor and bidirectional MIDI are v1.x.
+
 ## What it does
 
 MIDI Learn is the interactive way to map physical controls (knobs, faders, footswitches, expression pedals) to plugin parameters and Stardust actions.
 
 The flow:
-1. In Edit Mode, click the "MIDI Learn" button next to any parameter (e.g. Reverb Mix)
+1. In Program mode, click the "MIDI Learn" button next to any parameter (e.g. Reverb Mix)
 2. Modal appears: *"Move a control..."*
 3. Turn a knob, move the expression pedal, press a footswitch
 4. Stardust detects the MIDI message (source, channel, CC/note number)
@@ -91,7 +93,7 @@ See [Device Profiles](/docs/pit/features/device-profiles/) for related quirks.
 
 ## MIDI activity indicator
 
-In Live Mode, a row of small dots shows real-time MIDI activity per device. Lets you confirm at a glance that your controls are talking. If something stops working mid-show, the dots tell you instantly whether the issue is hardware (no signal) or software (signal but no action).
+In Perform mode, a row of small dots shows real-time MIDI activity per device. Lets you confirm at a glance that your controls are talking. If something stops working mid-show, the dots tell you instantly whether the issue is hardware (no signal) or software (signal but no action).
 
 See Widget Registry.
 
@@ -125,7 +127,7 @@ See Data Model.
 
 - [Device Profiles](/docs/pit/features/device-profiles/)
 - [Cascading Settings](/docs/pit/concepts/cascading-settings/)
-- [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
+- [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
 - Widget Registry
 - MIDI Internals
 - Data Model

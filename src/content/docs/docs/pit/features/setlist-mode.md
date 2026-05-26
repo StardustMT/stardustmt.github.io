@@ -5,7 +5,7 @@ description: "Target version: v0.5"
 
 > Walk through the show in order. Auto-advance or jump freely. Always know what's next.
 
-**Target version:** v0.5
+**Status:** Core Show / Song / Patch model shipped in v0.3.0; UX refinements (splash recent-shows, layout templates, perform-mode list widgets) in v0.9.0–v0.11.0.
 
 ## What it does
 

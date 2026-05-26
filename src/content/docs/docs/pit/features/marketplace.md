@@ -5,7 +5,7 @@ description: "Target version: v1.0-5"
 
 > Paid sharing of programmed shows, patch presets, and other content. Lemon Squeezy as Merchant of Record. Creators set pricing. Stardust takes a 15% commission.
 
-**Target version:** v1.0-5
+**Status:** v2.0+ — see [Marketplace architecture](/docs/ecosystem/marketplace-architecture/) for the full design. The v1.x [community share hub](/docs/pit/features/community-sharing/) is the bridge step.
 
 ## What it does
 

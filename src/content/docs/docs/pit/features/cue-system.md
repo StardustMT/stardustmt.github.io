@@ -5,6 +5,8 @@ description: "A cue is a trigger → action pairing that fires during performanc
 
 > Trigger actions during a Song from footswitches, MIDI events, or (eventually) timed cues.
 
+**Status:** Basic footswitch + MIDI-triggered cues from v0.6.0 (via [button/switch rig component](/docs/pit/features/button-switch-component/)). Timed cues alongside [click track editor](/docs/pit/features/click-track-editor/) in v0.12.0. Full Show Control surface (MSC / OSC / DMX / LTC / MTC) is [v2.0+](/docs/pit/features/show-control/).
+
 ## What it does
 
 A **cue** is a trigger → action pairing that fires during performance. Cues let you do things like:

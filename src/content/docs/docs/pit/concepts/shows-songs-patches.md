@@ -19,7 +19,7 @@ A **Show** is the top-level container — the production you're playing. Example
 
 A Show owns:
 - **Settings**: audio device, MIDI device list, channel routing, master volume, click track
-- **UI layout**: the default Live Mode arrangement
+- **UI layout**: the default Perform-mode arrangement
 - **Terminology**: what to call sub-items (default `Song`, but you can use `Number`, `Cue`, `Piece`, `Track`, `Set`, `Item`, or custom)
 - **Songs**: the ordered list of items in the show
 
@@ -93,7 +93,7 @@ See [Patch Sequencing](/docs/pit/features/patch-sequencing/) for the full pictur
 ## Related pages
 
 - [Cascading Settings](/docs/pit/concepts/cascading-settings/)
-- [Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)
+- [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
 - [Patch Sequencing](/docs/pit/features/patch-sequencing/)
 - Data Model
 - [Why we chose this hierarchy](/docs/pit/concepts/shows-songs-patches/)

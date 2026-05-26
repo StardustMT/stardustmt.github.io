@@ -5,7 +5,7 @@ description: "Target version: v0.5–v1.0"
 
 > Free hub for sharing device profiles, UI layouts, color themes, effect presets, patch presets — anything users want to give away.
 
-**Target version:** v0.5–v1.0
+**Status:** v1.x — free anonymous bridge step before the full [marketplace](/docs/ecosystem/marketplace-architecture/).
 
 ## What it does
 

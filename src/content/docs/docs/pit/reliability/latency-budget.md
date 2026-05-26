@@ -122,13 +122,16 @@ If your measured latency is higher than target:
 5. **Disable plugin sandboxing** for testing only (don't ship a show like this — sandboxing is critical for reliability)
 6. **Disable other system tasks** during performance (close browsers, disable Wi-Fi power-save)
 
-## Phase status
+## Version status
 
-| Phase | What's measured |
+| Version | What's measured |
 |---|---|
-| v0.2 | Latency measurement tool, latency display in Audio panel |
-| v0.3 | Continuous monitoring with alert on degradation mid-show |
-| v0.4 | Latency budget breakdown UI (showing where time goes) |
+| **v0.6.0** | Engine reports latency through to the engine-monitor surface; basic measurement |
+| **v0.7.0** | Continuous monitoring with alert on mid-show degradation (rides on the sandboxing watchdog) |
+| **v0.11.0** | Engine monitor widget in Perform mode surfaces latency live |
+| **v0.15.0** | Latency-budget breakdown UI (per-API timings, hardware recommendations); shipped as a dedicated diagnostic surface |
+
+The numbers above are **target latencies** — what Stardust commits to delivering under recommended hardware configurations. The engine-monitor widget (v0.11.0) and the latency measurement tool (v0.6.0+) are how you verify what you're actually getting.
 
 ## Related pages
 

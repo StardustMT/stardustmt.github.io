@@ -1,0 +1,80 @@
+---
+title: "Pit Mixer"
+description: "Multi-channel audio input mixer for routing the pit's musicians to the MD's IEM bus. USB-multitrack for v1.0; Dante/AVB later."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="Planned · v0.10.0" variant="note" />
+
+> The MD needs a custom mix. The drummer's overheads, the bass DI, the violins, the conductor's talkback. None of that is routed through Pit's patches — it's its own channel strip. The Pit Mixer is where it lives.
+
+## What it is
+
+A dedicated screen in Program mode (under Setup, but lives in its own surface) that gives the MD a multi-channel mixer for **audio inputs that aren't keyboard patches** — typically the rest of the pit's microphones and DIs coming off a USB-multitrack interface.
+
+The output is a custom mix sent to the MD's IEM bus (separate from the main mix). The MD configures it once, adjusts during rehearsal, and runs it during the show.
+
+## Per-channel controls
+
+Each input channel gets:
+
+- **Meter** — peak + RMS, color-coded
+- **Gain** — input trim in dB
+- **Pan** — for stereo IEMs
+- **Mute** / **Solo**
+- **HPF / LPF** — basic filters (corner frequency adjustable)
+- **Send level** — to the MD's IEM bus
+- **Channel label** — "Drums OH L," "Bass DI," "Violin 1," "Conductor talkback," etc.
+- **Stem assignment** — for grouping (drums / strings / brass / etc.)
+
+## Hardware scope for v1.0
+
+**USB-multitrack only.** Pit reads all available input channels from the selected audio device. Typical interfaces:
+
+- Focusrite Scarlett 18i20 — 18 in / 20 out
+- MOTU 16A — 16 in / 16 out
+- RME Fireface UFX III — 12 mic + 12 line + 12 ADAT
+- Behringer X32 / Midas — 32 in via USB
+
+Anything cpal can open as a multi-channel input device works.
+
+## Routing model
+
+```
+USB inputs ──→ Pit Mixer channels ──→ MD's IEM bus
+                                  ↘ (optional) main mix bus
+                                  ↘ (optional) Pit recording bus
+```
+
+Channels route to one or more output buses. Default routing: every channel goes to the MD's IEM bus; main mix and recording are opt-in per channel.
+
+## What's deferred to v2.0+
+
+- **Dante / AVB** — full network audio support. Requires more vendor coordination and a different driver model.
+- **MADI / network grid** — same.
+- **Wireless monitor protocol integration** — connecting to existing wireless IEM packs.
+- **Full FOH-shaped mixing** — Stardust is not trying to be a FOH console. The Pit Mixer is specifically for the MD's local mix.
+
+## Why this lives in Pit, not in a separate console
+
+Most MDs in the pit don't have access to an in-pit physical mixer. The standard workflow is either:
+
+1. Ask FOH to set up an IEM mix and hope they got the relative levels right
+2. Bring a tiny analog mixer and DI everything through it
+
+Both are bad. (1) puts the mix in someone else's hands; (2) adds cables, latency, and a single point of failure. Pit Mixer makes "I run my own monitor mix" a first-class app feature — the MD's laptop becomes the IEM mix engine.
+
+## Touch / fader hardware
+
+A v1.0 stretch and a confirmed v1.x deliverable: bind hardware fader controllers (Behringer X-Touch, Mackie Control, Korg nanoKONTROL) to mixer channels via the existing MIDI Learn flow. Faders, knobs, and mute/solo buttons all map to specific channels.
+
+## Performance Lock interaction
+
+When Performance Lock is on, the Pit Mixer **is still adjustable** — you need to tweak levels mid-show. Channel routing changes (adding/removing channels, changing bus assignments) are blocked; gain/pan/mute/solo/send-level are not.
+
+## Related pages
+
+- [Audio I/O](/docs/pit/features/audio-io/)
+- [Audio input](/docs/pit/features/audio-input/)
+- [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)

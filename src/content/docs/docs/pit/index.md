@@ -11,7 +11,7 @@ If you're trying to understand Pit:
 
 - **[Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)** — the core mental model. The vocabulary every page assumes.
 - **[Cascading settings](/docs/pit/concepts/cascading-settings/)** — set up your rig once, override only where you need to.
-- **[Edit Mode vs Live Mode](/docs/pit/concepts/edit-vs-live/)** — the two modes you'll use the app in.
+- **[Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)** — the three modes you'll use the app in, plus the Performance Lock toggle.
 - **[Architecture Overview](/docs/pit/architecture/overview/)** — how the pieces fit together under the hood.
 
 If you're sizing Pit against the alternatives:
@@ -20,13 +20,13 @@ If you're sizing Pit against the alternatives:
 
 If you're tracking development:
 
-- **[Pit roadmap](/docs/pit/roadmap/)** — version-by-version milestones with exit criteria. Current focus: v0.1 Foundations.
+- **[Pit roadmap](/docs/pit/roadmap/)** — version-by-version milestones with exit criteria. Current focus: v0.6.0 engine completeness (v0.5.0 multi-plugin chain hosting shipped).
 
 ## What's in this section
 
 | Section | Pages | What's there |
 |---|---|---|
-| [Concepts](/docs/pit/concepts/shows-songs-patches/) | 3 | Shows / Songs / Patches model, cascading settings, Edit vs Live |
+| [Concepts](/docs/pit/concepts/shows-songs-patches/) | 3 | Shows / Songs / Patches model, cascading settings, Setup / Program / Perform |
 | [Architecture](/docs/pit/architecture/overview/) | 2 | System overview, Tauri + Rust + React stack |
 | [Reliability](/docs/pit/reliability/latency-budget/) | 6 | The properties that make Pit usable mid-show |
 | [Features](/docs/pit/features/plugin-hosting/) | 18 | Every feature, current and planned, with status |

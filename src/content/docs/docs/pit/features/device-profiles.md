@@ -5,6 +5,8 @@ description: "A device profile is a JSON file describing a piece of hardware (ke
 
 > Auto-detect your hardware and pre-label every knob, fader, and pedal — no manual MIDI Learn for known devices.
 
+**Status:** Planned · v0.6.0 — alongside per-source hardware MIDI binding and the [button/switch rig component](/docs/pit/features/button-switch-component/). Bundled-profile catalog grows incrementally toward v1.0.
+
 ## What it does
 
 A **device profile** is a JSON file describing a piece of hardware (keyboard, footswitch, expression pedal, MIDI controller). When Stardust detects a known device (via USB manufacturer/product ID), it auto-applies the profile:

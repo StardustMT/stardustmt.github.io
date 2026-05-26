@@ -3,8 +3,7 @@ title: "Audio input rigs (guitar, bass, vocals, winds)"
 description: "Bring analogue sources into Pit through an audio interface, route them through plugin effects, and treat them as first-class sources alongside MIDI keyboards. Cue-aware, song-structured, theatre-native."
 ---
 
-> [!NOTE]
-> **Status: ⚪ Planned for v2.0+.** This is a substantial architectural expansion that pivots Pit from "synth host" to "realtime performance graph engine." The shape of the feature is decided; engineering happens after Pit v1.0 ships and the keyboard story is stable.
+**Status:** v2.0+ — a substantial architectural expansion that pivots Pit from "synth host" to "realtime performance graph engine." The shape of the feature is decided; engineering happens after Pit v1.0 ships and the keyboard story is stable.
 
 Pit's day-one audience is keyboardists. But the same Show / Song / Patch model that organizes a keys book applies just as cleanly to **any** live audio source: guitar, bass, vocals, winds with pickup systems, electronic percussion, even live Foley. The architectural pivot is to model Pit not as a "synth host" but as a **realtime performance graph engine** where the input source is one of several types.
 

@@ -5,7 +5,7 @@ description: "Phase: Basic in v0.2, full in v0.4"
 
 > Choose your audio device, sample rate, buffer size, routing. Test signals. Monitor latency. Standard but essential.
 
-**Phase:** Basic in v0.2, full in v0.4
+**Status:** Basic shipped in v0.2.0; full hardening in v0.6.0 (Windows WASAPI Exclusive default, ASIO surfacing, separate input/output device support).
 
 ## What it does
 

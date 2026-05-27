@@ -1,80 +1,125 @@
 ---
 title: "Conductor cam"
-description: "USB webcam input with overlay info, displayed inline in Perform mode or as a floating window on a second monitor."
+description: "Live video feed of the conductor with show-aware overlay text. USB webcam in v1.0; analog cams via capture cards work via UVC. RTSP/NDI/virtual-webcam in v2.0+."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.11.0" variant="note" />
+<Badge text="📋 Planned · v0.11.0" variant="note" />
 
-> Stage right doesn't have line-of-sight to the conductor. The conductor cam puts the conductor on screen with the bar/beat/tempo/cue overlaid on top.
+> Stage right doesn't have line-of-sight to the conductor. The conductor cam puts the conductor on screen with the bar / beat / tempo / cue overlaid on top.
 
-## What ships in v0.11.0
+## v1.0 scope
 
-USB webcam input, video on screen, configurable overlay text, pop-out floating window for second-monitor display. That's the v1.0 scope — deliberately narrow.
+USB webcam input, video on screen, configurable overlay text, pop-out floating window for second-monitor display. Deliberately narrow.
 
-## Capture
+UVC-class hardware (which includes most USB webcams and HDMI capture cards) works via `getUserMedia` in the Tauri webview — no custom driver layer needed.
 
-- **USB webcam only** — Pit reads from a UVC-compliant USB webcam attached to the host computer
-- **Cross-platform** — uses [`nokhwa`](https://crates.io/crates/nokhwa) (or equivalent) for cpal-style abstraction
-- **Resolution / framerate** — auto-detected; configurable in widget settings
-- **Single camera** for v1.0
+## Per-widget config
 
-## Overlay
+- **Device pick** — which USB camera (drop-down of detected UVC devices)
+- **Mirror toggle** — POV cams sometimes flip; toggle to compensate
+- **Aspect ratio** — auto / 16:9 / 4:3 / custom
+- **Crop** — drag to crop the feed
+- **Audio mute** — **always on** (analog cams sometimes have mics you don't want bleeding)
+- **Pop-out as floating Window** — for second-monitor display
+- **Resolution / framerate** — auto-detected from device; configurable
 
-The widget composites text + meters over the video feed:
+## Overlay info elements
 
-- **Song name**
-- **Patch name**
-- **Bar : beat** (from transport)
-- **Tempo** (current BPM)
-- **Clock** (running time)
-- **Cue point** (current cue, if any)
-- **Custom text** (markdown-rendered, per-show or per-song)
+Toggleable per-element, positionable individually:
 
-Each overlay element has position, font, size, color, and background opacity controls. Defaults are tuned for "readable over a typical conductor cam feed" — large, high-contrast, with a semi-transparent background.
+- Song name (with optional number)
+- Patch name (with optional number)
+- Next-patch preview
+- Bar number (when click active)
+- Beat indicator (visual flash)
+- Tempo + time signature (when click active)
+- Show clock + splits
+- Custom static text
+- Custom dynamic text with token bindings (`{current.song}`, `{current.patch}`, etc.)
+- Watermark (Pit logo or custom image — useful for archive recordings)
+
+## Per-overlay config
+
+- **Position** — anchored corner, free-position, edge banner
+- **Background style** — solid, semi-transparent, none
+- **Font** — size + family + weight + color
+- **Readability over video** — outline / drop-shadow controls (tuned defaults: outline 2px contrasting color)
+- **Visibility rules** — *"show only when changing patch"*, *"always"*, *"during click"*
 
 ## Two display modes
 
-### Inline (default)
+### Inline
 
-The widget sits in your Perform-mode layout like any other widget. Resizable. Useful when the conductor cam is part of your single-screen layout.
+Widget sits in your Perform layout like any other. Resizable. Useful when conductor cam is part of a single-screen layout.
 
 ### Pop-out floating window
 
-Right-click the widget → "Pop out." The conductor cam opens as a separate OS window that can be:
+Right-click → **Pop out**. Conductor cam opens as a separate OS window that can be:
 
 - Dragged to a second monitor
 - Sized to fill that monitor
-- Set to "always on top"
+- Set to *always on top*
 - Sent fullscreen
 
-This is the common workflow for keyboardists with two screens: main screen has the Perform layout, second screen has only the conductor cam, fullscreen.
+This is the common workflow for keyboardists with two screens: main screen has the Perform layout, second screen has only the conductor cam fullscreen. Overlay info stays in sync between inline and pop-out.
 
-The pop-out window stays in sync with the inline widget — overlay updates happen in both.
+## Output paths
 
-## What's not in v1.0
-
-The HANDOFF locks down v0.11.0 conductor cam at **USB webcam only.** Everything below is **v2.0+**:
-
-- **RTSP / IP camera input** — needs a full RTSP client, codec coverage, network reliability work
-- **NDI input** — needs the NDI SDK
-- **Capture-card UI affordance** — HDMI capture cards present as webcam-class devices on most OSes, so they technically work, but the "this card needs a specific source mode" UX is deferred
-- **Virtual webcam streaming output** — making Pit *be* a webcam to other apps
-
-This isn't a permanent no — it's an explicit decision to ship the working narrow case first, validate it, then expand. RTSP and NDI together cover ~95% of pro AV setups; we want to do them well, not half-do them in v1.0.
+- **Local rendering** on the MD's screen (inline + pop-out)
+- **Pop-out floating Window** for second monitor (cast backstage feed, FOH feed)
+- **Streaming output (v2.0+)** — bake composite to virtual webcam device so OBS / Zoom can consume
 
 ## Performance
 
 Video decode + overlay composite + display happens on a non-RT thread. The audio engine never touches the video path. A spike in video processing (camera resolution change, frame drop) can never cause an audio dropout.
 
+Frame rate target: 30 fps. Most USB UVC webcams deliver 30 fps at 720p without issue.
+
+## Latency reality check
+
+Software conductor cam latency is real and worth understanding.
+
+| Path | Latency | Notes |
+|---|---|---|
+| **Analog SDI / composite** | 0–5 ms | Physics-limited, electron speed. The bar. |
+| **USB UVC webcam** | 100–300 ms | Hardware + codec + browser overhead |
+| **NDI (network video)** | 30–80 ms | Improving with NDI HX3; v2.0+ feature |
+| **WebRTC** | 100–400 ms | Browser-dependent; not used |
+
+**Software is one order of magnitude behind analog.** Even cutting-edge NDI HX3 is ~30 ms vs analog's sub-5 ms. For a conductor cam used by the keyboardist (a passive read of the conductor's gesture, not a closed loop), 100–300 ms is workable — the keys player is following beats, not reacting to micro-cues.
+
+**For a serious venue where the conductor is on click**, the click is the master clock — the conductor cam is for *expression* and *cuing variation*, not beat sync. Software is fine there too.
+
+**For a closed-loop tempo-following scenario** (the keys player tries to follow rubato from the cam), analog wins. Pit doesn't try to compete with analog video here — we expose the camera, render the overlay, get out of the way.
+
+## Capture card support
+
+Capture cards like Elgato HD60 family ship as **UVC-class** devices on most OSes — they appear in the camera picker just like a USB webcam. Plug HDMI from a venue's conductor cam into a capture card → Pit sees it as a webcam → it works.
+
+**Documented, not dedicated UI.** No "capture card mode" toggle in v1.0. The card-as-UVC fall-through gives ~95% of pro AV setups a usable conductor cam without any new code.
+
 ## Privacy + permissions
 
 - Camera access requires explicit OS-level permission (macOS: TCC; Windows: settings)
-- The widget surfaces a clear indicator when the camera is active
-- The camera is disabled by default; you opt in per-show
+- Widget surfaces a clear indicator when the camera is active
+- Camera is disabled by default; you opt in per-show
+
+## What's deferred to v2.0+
+
+The v1.0 scope intentionally caps at "USB webcam works well." Everything richer is **v2.0+**:
+
+- **RTSP / IP camera input** — needs a full RTSP client, codec coverage, network reliability work
+- **NDI input** — needs the NDI SDK
+- **Capture-card UI affordance** — "this card needs a specific source mode" UX
+- **Virtual webcam streaming output** — making Pit *be* a webcam to other apps
+- **Low-latency mode** — direct GPU compositing, frame-pacing tuning
+
+This isn't a permanent no — it's an explicit decision to ship the working narrow case first, validate it, then expand. RTSP + NDI together cover ~95% of pro AV setups; we want to do them well, not half-do them in v1.0.
 
 ## Related pages
 
 - [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
+- [Latency budget](/docs/pit/reliability/latency-budget/)
 - [Pit roadmap](/docs/pit/roadmap/) (v0.11.0 widget catalog)

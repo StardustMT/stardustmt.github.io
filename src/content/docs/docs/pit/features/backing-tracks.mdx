@@ -1,107 +1,178 @@
 ---
 title: "Backing tracks"
-description: "Audio file playback synced to song transport, with cue points, vamp interaction, and patch transport triggers."
+description: "Per-song audio playback with transport, cue points, vamp interaction, and patch transport triggers. Backing tracks live on songs, not on patches."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.13.0" variant="note" />
+<Badge text="📋 Planned · v0.13.0" variant="note" />
 
-> Half of modern musical-theatre productions run to a click and tracks. Backing tracks are how Pit becomes "yes, you can run that show on this."
+> 80% of MT cabarets, tours, and school productions run backing tracks for orchestral parts the live band can't cover. Backing tracks are the second-biggest MainStage gap after sandboxing. v0.13.0 closes it.
 
-## What ships in v0.13.0
+## Why "a play button on a patch" is wrong
 
-Backing track support that covers the working case: per-song audio files, song transport, cue points, vamp interaction, and a transport-state machine the engine and UI both understand.
+The naive design is to put a play button on a patch. It's wrong. Backing tracks aren't patches — they're a **per-song resource with a transport**, and patches *interact* with the transport rather than *being* the transport.
 
-The full UX, transport-state-machine semantics, and vamp-transition rules get **refined during the v0.13.0 spec session** — the list below is the committed-to scope at the version-planning level.
+Counterexample: a single song has 4 patches the keyboardist switches between, all over one continuous orchestral track. The transport is one thing; the patches are four things. The transport doesn't restart when a patch changes.
 
-## Audio decoding
+So the data model treats tracks as song-level, and patches as opt-in interactors with the transport.
 
-[Symphonia](https://github.com/pdeljanov/Symphonia) (pure-Rust audio decoder) for:
+## Data model
 
-- **mp3**
-- **wav** (PCM, 16/24/32-bit)
-- **flac**
-- **ogg vorbis**
+```ts
+// Song gains:
+tracks: Track[]
+transport: SongTransport
 
-Sample rates and channel counts mismatched against the engine are converted on load (cubic resample) — not on the realtime path.
+Track {
+  id, label, file,
+  stemType: "click" | "guide" | "orchestral" | "vocal" | "fx" | "custom",
+  busOutput: BusId,
+  gain, pan, mute,
+  startOffsetMs: number          // negative = pre-roll
+}
+
+SongTransport {
+  bpm, timeSignature,
+  cuePoints: { id, label, positionMs }[],
+  followClick: boolean           // if true, click is master tempo for band — sends MIDI clock
+}
+
+// Patch gains optional:
+transportTriggers: TransportTriggers
+
+TransportTriggers {
+  onEnter: "none" | "play" | "pause" | "stop" | "jumpToCue:<cueId>"
+  onExit:  "none" | "pause" | "stop" | "fadeOut:<ms>"
+}
+```
+
+## The workflow
+
+A walk-through of using backing tracks for one song.
+
+1. **Setup → Show Settings → Buses** — configure FOH (stereo 1–2), IEM-click (mono 3), IEM-band (stereo 4–5)
+2. **Program → Song → Tracks tab** — drop in `click.wav`, `orch.wav`, `guide.wav`. Assign click to IEM-click bus, orch to FOH, guide to nothing (mute default)
+3. **Program → Song → Cue points** — scrub orch track, mark "Verse 1", "Chorus", "Bridge", "Vamp out"
+4. **Program → Patch (first patch of song)** — in Settings, set `onEnter: play` so transport starts when patch is selected
+5. **Program → Patch (vamp patch)** — set `onEnter: jumpToCue:vamp` so selecting it during an extended vamp resyncs
+6. **Perform → Layout** — add **Transport widget** (play/pause/stop/position/cue jump dropdown) and **per-track Mute widget** so MD can mute guide vocal mid-song
+7. **Live** — hit first patch, transport rolls. Switch patches as needed (transport keeps playing). Hit vamp patch during extended scene — transport jumps to vamp cue. Bridge patch's `onExit` fades out orch over 4 seconds
 
 ## Per-song tracks tab
 
-Each song's settings get a new "Backing" sub-tab with a per-track row editor:
+The song's Backing sub-tab is a per-track row editor:
 
 | Column | What |
 |---|---|
 | File | Path to audio file, drag-drop supported |
 | Label | Display name in transport widget |
-| Stem type | Drums / bass / guitars / keys / orch / vox / click / custom |
+| Stem type | Click / guide / orchestral / vocal / FX / custom |
 | Bus output | Which bus this track routes to (defaults vary by stem type) |
 | Gain | Per-track gain trim (dB) |
 | Pan | Per-track pan |
 | Mute | Boolean |
-| Start offset | Sample-accurate offset from song start |
+| Start offset | Sample-accurate offset from song start (negative = pre-roll) |
 
 A song can have any number of tracks. Common shape: 4–8 stems + a click.
 
+## Audio decoding
+
+Pure-Rust via [symphonia](https://github.com/pdeljanov/Symphonia):
+
+- **mp3**
+- **wav** (PCM 16 / 24 / 32-bit)
+- **flac**
+- **ogg vorbis**
+
+Sample rates and channel counts mismatched against the engine are converted on load (cubic resample) — not on the realtime path.
+
 ## Song transport
 
-A first-class engine concept (introduced in v0.8.0 for click, extended in v0.13.0 for tracks):
+A first-class engine concept (introduced for click in v0.8.0, extended for tracks in v0.13.0):
 
 - **Play / Pause / Stop / Seek**
 - **Position** (bar:beat or seconds)
-- **Sample-accurate cue jump** — jump to a cue point without losing sync
-- **MIDI clock sync** — clock send tracks the transport BPM
+- **Sample-accurate cue jump** — decode forward seek
+- **MIDI clock sync** — clock send tracks the transport BPM, song-level (not per-track)
 
 The transport panel in Program mode lets you scrub during authoring; in Perform mode, the transport widget exposes play/pause/jump plus the position display.
-
-## Cue points within tracks
-
-Cue points are named timeline anchors that the transport can jump to:
-
-- Editable in the click track editor (v0.12.0) and the new backing-track editor
-- Jump-to-cue via button/switch rig component (action: "jump to cue")
-- Visible in the transport widget
 
 ## Patch transport triggers
 
 Optional per-patch hooks:
 
-- **onEnter** — when this patch becomes active, fire a transport command (play / jump-to-cue / etc.)
-- **onExit** — when this patch becomes inactive, same
+- **`onEnter`** — when this patch becomes active, fire a transport command (play / jump-to-cue / etc.)
+- **`onExit`** — when this patch becomes inactive, same
 
-**Off by default.** When on, they make patch advances ↔ track positions a coupled system; this is powerful but error-prone in performance, so it's opt-in per patch.
+**Off by default.** When on, they make patch advances ↔ track positions a coupled system; powerful but error-prone in performance, so it's opt-in per patch.
 
-## Vamp interaction
+## Vamp interplay with the click track
 
 Vamps in the click track (authored in v0.12.0) are regions of time that loop. With backing tracks:
 
-- A vamp region in the click track also loops the transport over the same region
-- A **footswitch action "end vamp at next loop point"** marks the vamp as "exit at the next bar boundary"
+- A vamp region in the click track also **loops the transport** over the same region
+- A footswitch action **"end vamp at next loop point"** marks the vamp as "exit at the next bar boundary"
 - The transport completes the current loop and proceeds past the vamp's end marker
+- Patches can subscribe to the "exit vamp" event for auto-advance
 
-This makes "vamp until conductor cues end" a usable workflow without the conductor having to mash a button at a specific bar.
+This makes *"vamp until the conductor cues end"* a usable workflow without the MD mashing a button at a specific bar.
 
-## MIDI recording
+## MIDI recording + audio bounce (same version)
 
-Coupled with backing tracks because the infrastructure overlaps:
+Coupled with backing tracks because the infrastructure overlaps.
 
-- Capture MIDI input live while patches are playing
-- Render the result to an audio file via offline render through the patch chain
-- No piano-roll editor in v1.0 — the captured MIDI lives as a `.mid` file you can import to a DAW for editing
-- Piano-roll editor is v1.x backlog
+**What's cheap (ships v0.13.0):**
 
-## What's deferred from v0.13.0
+- MIDI capture from rig → write to song track: ~3 days (engine already captures MIDI)
+- Audio bounce (render MIDI through patches to audio file): ~1 week (uses the offline-render plumbing built for the balance tool)
+- Multi-take support: ~3 days
 
-- **Full DAW MIDI import** — multi-track SMF → click + per-instrument tracks. v1.x.
-- **Real-time time stretching** — for following a conductor with tracks. v2.0+.
-- **Track stem mixing UI** in Perform mode beyond basic per-track mute. The full mixer is v0.10.0's Pit Mixer.
+**What's expensive (deferred to v1.x):**
 
-## Format note
+- Piano-roll editor (note grid, drag/drop, velocity edit, quantize, swing): ~3–4 weeks basic, 8+ production-quality
+- Timeline editor (audio waveform display, region edit): ~3 weeks
 
-Backing track support is the trigger for the **`.stardustshow/` bundle format migration** (also v0.13.0). Audio assets need to live alongside the show file. The single-JSON v1 format gets a one-shot migration to a folder bundle.
+**v0.13.0 ships:** record MIDI → bounce to audio. **v1.x:** piano roll.
+
+Why it matters: an MD can record an orchestra part live in Pit (playing through their patches), bounce it to an audio file, and use the result as a stem in the same show. Positions Pit as more than a host — a lightweight production environment for MT pit work.
+
+## What this gets you over MainStage Playback
+
+- **Patches drive transport** — not a separate Playback plugin. Feels native.
+- **Cue points tied to patches** let you handle vamps / codas / conductor variations cleanly
+- **Per-bus stem routing** is first-class — MainStage requires manual channel-strip plumbing
+- **MIDI recording + bounce** in the same app — no DAW round-trip needed for ad-hoc stems
+
+## Bundle file format migration (same version)
+
+Backing tracks force the file-format issue. Audio files don't belong inline in JSON; they belong as assets. v0.13.0 migrates from single `.stardustshow` JSON file to the `.stardustshow/` bundle directory:
+
+```
+my-show.stardustshow/
+├── show.json
+├── libraries/
+├── assets/
+│   ├── audio/                  # backing track stems
+│   ├── images/
+│   └── samples/
+└── thumbnails/
+```
+
+Opt-in `.zip` export for sharing. Old single-JSON shows migrate cleanly on first open.
+
+See [Patch library](/docs/pit/features/patch-library/) for the bundle structure details.
+
+## What's deferred
+
+- **Real-time time-stretching** to follow a conductor with tracks — v2.0+
+- **Full DAW MIDI import** — multi-track SMF → click + per-instrument tracks. v1.x
+- **Track stem mixing UI** in Perform mode beyond basic per-track mute — the full mixer is v0.10.0's [Pit Mixer](/docs/pit/features/pit-mixer/)
+- **Piano-roll editor** for recorded MIDI — v1.x
 
 ## Related pages
 
 - [Click track editor](/docs/pit/features/click-track-editor/)
 - [Pit Mixer](/docs/pit/features/pit-mixer/)
 - [Cue system](/docs/pit/features/cue-system/)
+- [Balance tool](/docs/pit/features/balance-tool/) — shares the offline-render plumbing

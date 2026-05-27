@@ -1,27 +1,73 @@
 ---
 title: "Marketplace architecture"
-description: "How Stardust's eventual paid + free marketplace works — Merchant of Record, self-hostable server, AGPL-compatible, never gates the app."
+description: "How Stardust's eventual marketplace + sync stack works. Three tiers, Merchant of Record for payments, CRDT for sync, self-hostable, AGPL-compatible. All v2.0+."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="v2.0+" variant="tip" />
+<Badge text="💭 v2.0+" variant="tip" />
 
-> This is a **vision document** describing how the marketplace works when it ships post-1.0. Architectural decisions in v1.0 (data model, library scope, extension API) are made with this in mind so we don't have to break them when it lands.
+> This is a **vision document** describing how the marketplace + sync stack works when it ships post-1.0. The v1.0 architectural decisions (all-patches-as-references data model, `.stardustshow/` bundle format, extension API sandbox) are made with this in mind so we don't have to break them when it lands.
 
-## Hard constraints
+**Skip for v1.0.** All of this is v2.0+. Documented here so future planning has the reference and v1.0 architecture stays compatible.
 
-These are **non-negotiable** — they survive any architectural revision:
+## Hard constraints (non-negotiable)
+
+These survive any architectural revision:
 
 1. **The app works fully without the marketplace.** No login required for the app itself. No connectivity required to load shows, load patches, or play.
 2. **Anonymous downloads stay available.** Free content can always be fetched without an account.
 3. **No mandatory cloud lock-in.** Users own their library data; the marketplace is a distribution channel, not a hostage situation.
-4. **Self-hostable.** A team or community can run their own instance of the marketplace server. The protocol is open.
-5. **AGPL-compatible.** The marketplace server (and Stardust itself) must remain AGPL-licensable — including paid content distribution. Where a Merchant-of-Record sits, it sits cleanly.
+4. **Self-hostable.** A team or community can run their own instance of the marketplace server. The protocol is open. AGPL-licensed.
+5. **AGPL-compatible.** The marketplace server (and Stardust itself) must remain AGPL-licensable — including paid content distribution. Where a Merchant of Record sits, it sits cleanly.
+
+## The three tiers
+
+### Tier 1 — Community sharing <Badge text="v1.x bridge" variant="note" />
+
+Free, no payments, anonymous-ok. The v1.x bridge step.
+
+- Upload + download shows, patches, rig components, themes, layouts, SFZ packs
+- Search / browse / filter / tag
+- Ratings + reviews
+- Creator pages
+- Reporting / moderation tooling
+
+This validates the content-delivery side without the payment plumbing. The full marketplace builds on top of it.
+
+### Tier 2 — Marketplace <Badge text="v2.0 (or v1.5)" variant="note" />
+
+Tier 1 plus:
+
+- Creator-set pricing
+- Payment processing via Merchant of Record (Lemon Squeezy / Polar.sh)
+- License verification (downloads tied to purchaser's account)
+- Tax compliance (US sales tax, EU VAT, ROW)
+- Creator payouts
+- Refunds + disputes
+- Verified creator badges
+
+### Tier 3 — Cloud sync + collaboration <Badge text="v2.0+" variant="note" />
+
+Per-account, CRDT-backed:
+
+- Show backup to cloud
+- Library sync across user's devices
+- Multi-MD collaboration on shared shows (CRDT-backed real-time)
+- Hot-spare rig sync (LAN-primary, cloud-fallback)
+- Multi-keyboardist position sync (LAN-primary)
+- Optional: cloud-rendered backing track previews, cloud-stored crash reports
+
+## Architectural principles
+
+- **Local-first, cloud-optional** — every cloud feature additive, never gates
+- **Self-hostable** — open-source server side (AGPL ethos). Community/enterprises can run their own marketplace + sync instance. Stardust hosts the canonical instance.
+- **Pluggable account system** — anonymous downloads (free content), Stardust account (canonical), self-hosted account (federated), future OIDC bring-your-own-provider
+- **No tracking, no ads, no dark patterns** — telemetry opt-in only, analytics aggregate-only, payment data only where required
 
 ## Merchant of Record
 
-Stardust does not build payment infrastructure from scratch. Payments are processed by a **Merchant of Record** (MoR) — a third-party service that handles:
+Stardust does **not** build payment infrastructure from scratch. Payments are processed by a **Merchant of Record** (MoR) that handles:
 
 - Credit card processing
 - Tax compliance (VAT, sales tax, digital services tax)
@@ -37,7 +83,26 @@ Candidate providers:
 
 The MoR holds the payment flow; Stardust holds the content delivery. Sellers get paid by the MoR (minus fees); buyers get a license token from the MoR that the Stardust server redeems against the content.
 
-## The three roles
+## Recommended tech stack
+
+| Layer | Recommendation | Why |
+|---|---|---|
+| API | Rust + Axum (or Go + Chi if team grows beyond Rust) | Type safety, perf, single binary, matches engine stack |
+| Database | PostgreSQL on Neon (serverless) or self-hosted | Boring, reliable; Neon branching for staging |
+| Object storage | Cloudflare R2 | S3-compatible, **no egress fees** (huge for marketplace downloads), cheap |
+| CDN | Cloudflare | Free tier covers a lot; integrates with R2 |
+| Real-time messaging | Soketi (Pusher protocol) or raw WebSocket via Axum | Soketi if want client library ecosystem; raw WS if want zero deps |
+| Search | Meilisearch (self-hosted) or Postgres full-text | Meilisearch fast + typo-tolerant; PG full-text fine for marketplace v1 |
+| Auth | Clerk (managed) or self-hosted Ory Kratos | Clerk = ship fast; Ory = full control + self-hosted |
+| Payments | Lemon Squeezy or Polar.sh (Merchant of Record) | MoR handles tax compliance globally — do NOT build yourself |
+| Email transactional | Resend or Postmark | Cheap, reliable |
+| Crash reporter | GlitchTip (self-hosted Sentry-compatible) | Open source, no per-event fees |
+| Site analytics | Plausible (managed or self-hosted) or Umami | Privacy-first, no cookie banner |
+| Hosting | Fly.io or Railway for API; Cloudflare Pages for marketing/docs | Cheap, low cognitive overhead, scales reasonably |
+
+See [Infrastructure choices](/docs/ecosystem/infrastructure-choices/) for the "why not AWS/GCP" rationale.
+
+## Data flow on purchase
 
 ```
 Buyer ←──────── Stardust marketplace server ────────→ Seller
@@ -47,10 +112,22 @@ Buyer ←──────── Stardust marketplace server ──────
        Merchant of Record (MoR)
 ```
 
-- **Buyer** — a Stardust user installing paid or free content
-- **Seller** — a content author publishing patches, extensions, plugin bundles, click tracks, etc.
-- **MoR** — handles money + tax
-- **Stardust marketplace server** — handles content, licenses, search, ratings
+1. Buyer clicks Purchase in the marketplace UI inside Pit
+2. Pit opens the MoR's checkout (in-app webview or external browser)
+3. Buyer pays the MoR
+4. MoR posts a success webhook to the Stardust marketplace server
+5. Stardust server issues a **license token** to the buyer's account
+6. Pit fetches the asset, validates the license, installs to the global library
+
+## License model
+
+Each paid purchase produces a **license token** held in the user's Stardust account. The token authorizes:
+
+- Download of the asset
+- Use of the asset across all the user's installs
+- Receipt of updates (within the subscription window if subscription-based)
+
+License tokens are stored in the user's Stardust account *and* cached locally so the app keeps working without network access. The marketplace server only needs to be reachable for purchase, install, and update — not for *running* content that's already installed.
 
 ## What's sold
 
@@ -68,24 +145,27 @@ The marketplace is a distribution surface for **library entries** (per [Patch li
 
 Paid content can be one-time-purchase or subscription (typically annual, for content that gets updated like maintained click tracks for active touring productions).
 
-## License model
+## Sync architecture — CRDT (Automerge)
 
-Each paid purchase produces a **license token** held in the user's Stardust account. The token authorizes:
+Three patterns considered:
 
-- Download of the asset
-- Use of the asset across all the user's installs
-- Receipt of updates (within the subscription window if it's subscription-based)
+- **Last-write-wins (LWW)** — simple; data loss on conflict
+- **Operational Transform (OT)** — server resolves edits; needs always-on server
+- **CRDTs** (Automerge, Yjs) — edits merge mathematically; works offline + P2P + via server
 
-License tokens are stored in the user's Stardust account *and* cached locally so the app keeps working without network access. The marketplace server only needs to be reachable for purchase, install, and update — not for *running* content that's already installed.
+**Recommendation: CRDTs (Automerge).**
 
-## Data flow on purchase
+Reasons:
 
-1. Buyer clicks "Purchase" in the marketplace UI inside Pit
-2. Pit opens the MoR's checkout (in-app webview or external browser)
-3. Buyer pays the MoR
-4. MoR posts a success webhook to the Stardust marketplace server
-5. Stardust server issues a license token to the buyer's account
-6. Pit fetches the asset, validates the license, installs to the global library
+- Local-first principle satisfied — works fully offline, sync when reconnected
+- Multi-device for one user — same show on laptop + studio Mac sync automatically
+- Multi-user collaboration — two MDs editing the same show resolve cleanly
+- Hot-spare rig — same sync protocol, just over LAN
+- Multi-keyboardist position sync — same protocol, ephemeral state
+- Mature — Automerge 2 production-ready
+- Open source — MIT/Apache, no licensing concerns
+
+The show file format is amenable to CRDTs: node-based graph + reference-based patches = exactly the shape CRDTs handle well. Migration from "save whole document" to "CRDT-backed document with change history" is non-trivial but pays off across many features.
 
 ## Self-hosted instances
 
@@ -95,33 +175,58 @@ The marketplace server is **open source** under AGPL. A theatre company, conserv
 - Regional content (a country-specific show ecosystem)
 - Pre-public-launch testing
 
-Self-hosted instances can federate with the canonical Stardust marketplace (v2.0+) so content is searchable across instances; or they can stay private.
+Self-hosted instances can federate with the canonical Stardust marketplace (v2.0+) so content is searchable across instances; or stay private.
 
-## Community share hub (the bridge)
+## Phasing
 
-Before the full marketplace, a **community share hub** ships in v1.x as a stripped-down distribution layer:
+| Phase | Versions | What ships |
+|---|---|---|
+| **v1.0 (no cloud)** | through v1.0.0 | Pit fully local. No account. No marketplace. No sync. |
+| **Bridge** | v1.1 – v1.3 | Anonymous share hub: upload as public URL, download with link. No accounts, no payments. Cloudflare-only stack. Foundation before commerce. |
+| **Marketplace v1** | v1.5 (or v2.0) | Tier 2: full marketplace with accounts, paid content, Lemon Squeezy MoR, creator pages. ~3–4 months dedicated. |
+| **Sync + collaboration** | v2.0 (or v2.x) | Tier 3: CRDT migration, cloud backup, multi-device sync, real-time collab, hot-spare LAN, multi-keyboardist LAN. ~6 months. |
+| **Federation / self-host** | v2.x | Documented self-hosted marketplace server; federated identity. `marketplace.stardust.org` canonical; others run their own. |
 
-- Free content only
-- Anonymous downloads
-- Per-asset GitHub-style upvotes
-- No MoR, no licensing, no accounts required to download
+## Rough cost projection
 
-This validates the content-delivery side without the payment plumbing. The full marketplace builds on top of it.
+Canonical marketplace instance scaled to ~10k users / 1k creators / 100k downloads per month:
 
-## Cloud provider stack (provisional)
+| Service | Cost |
+|---|---|
+| Fly.io (API + workers) | $30–80 |
+| Neon PostgreSQL | $20–50 |
+| Cloudflare R2 (storage + CDN) | $20–100 |
+| Clerk auth (10k MAU) | $0–25 |
+| Lemon Squeezy | 5% + $0.50 per transaction (no fixed) |
+| Plausible analytics | $9 |
+| GlitchTip crash | $0 self-hosted |
+| **Total fixed** | **~$80–270/month** |
+| Plus transaction fees | Variable |
 
-The marketplace server's provisional infrastructure:
+Affordable for indie. Lemon Squeezy MoR fee is the biggest cost but covers global tax compliance.
 
-- **Object storage** — Cloudflare R2 (cheap egress, S3-compatible)
-- **Compute** — Fly.io (lives close to users, simple deploy)
-- **Database** — Neon Postgres (managed, branchable)
-- **Auth** — Clerk or Ory (managed identity)
-- **Analytics** — Plausible (privacy-respecting)
-- **Errors** — GlitchTip (self-hostable Sentry alternative)
+## ADRs needed when marketplace work starts
 
-Architecture is provider-agnostic — anyone running their own instance can swap to AWS, GCP, or anything else. See [Infrastructure choices](/docs/ecosystem/infrastructure-choices/).
+- ADR: Marketplace tech stack + Merchant of Record selection
+- ADR: CRDT vs OT vs LWW for sync
+- ADR: User accounts + identity (managed vs self-hosted, federation)
+- ADR: Self-hosting + federation model
+- ADR: Content moderation policy + enforcement tooling
 
-## What this is not
+## What to do now (before any work)
+
+- **Don't build any of it for v1.0.** Pit shipping local-first is right; cloud after.
+- **Reserve domains**: `marketplace.stardust.org`, `accounts.stardust.org`, `api.stardust.org`
+- **Add stubs to v2.0+ backlog** (done in the [roadmap](/docs/pit/roadmap/))
+- **Design data model with sync in mind** — all-patches-as-references already helps; CRDT-friendliness is a free side-effect of structured normalized data
+- **Be careful about file format** — the `.stardustshow/` bundle format (folder) is more CRDT-friendly than monolithic JSON (individual files sync independently)
+- **Keep an ADR drafts folder** for future-you
+
+## What NOT to do
+
+**Don't build a Stardust account requirement into v1.0 "just in case."** Local-first means local-first. Adding cloud features later doesn't need account migration — the local install just starts offering optional account features.
+
+## What this is NOT
 
 - **Not an exclusivity deal.** Sellers can list the same content elsewhere.
 - **Not a DRM system.** Content is downloaded as files; copying is technically possible. Licensing is enforceable but not bulletproof — and we don't pretend otherwise.
@@ -134,3 +239,4 @@ Architecture is provider-agnostic — anyone running their own instance can swap
 - [Community sharing](/docs/pit/features/community-sharing/) — the v1.x bridge
 - [Marketplace](/docs/pit/features/marketplace/) — the consumer-facing surface
 - [Infrastructure choices](/docs/ecosystem/infrastructure-choices/)
+- [Extension API](/docs/pit/features/extension-api/) — extensions are marketplace assets too

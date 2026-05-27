@@ -1,88 +1,182 @@
 ---
 title: "Click track editor"
-description: "Bar-by-bar tempo authoring with vamps, repeats, codas, cue points, rits, and ralls. Always-live, no bake step."
+description: "Bar-by-bar tempo authoring with vamps, repeats, codas, cue points, rits, and ralls. Always-live, no bake step. SMF Type 1 roundtrips with every DAW."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.12.0" variant="note" />
+<Badge text="📋 Planned · v0.12.0" variant="note" />
 
-> The click track is a structured artifact, not a constant BPM value. You need vamps. You need rits. You need a coda jump. You need to scrub. The editor treats the click track as the first-class authoring surface it is.
+> The click track is a structured authorable artifact, not a constant BPM value. You need vamps. You need rits. You need a coda jump. You need to scrub. The editor treats the click track as the first-class authoring surface it actually is.
 
-## What it is
+## Where it lives
 
-A dedicated editor in Program mode that lives on the song's Click sub-tab. The output is the song's tempo map, which the engine consumes to drive the click bus + MIDI clock send + any vamp-driven transport behavior.
+A dedicated editor inside Program mode, on the song's **Click** sub-tab. The output is the song's tempo map, which the engine reads directly each audio block to drive:
 
-**No bake step.** Edits are live; play and edit in the same surface.
+- the click bus output (typically the drummer's IEM)
+- MIDI clock send (sync external rigs)
+- any vamp-driven transport behavior (backing tracks loop with the vamp)
+- the on-screen click-indicator widget
 
-## Tempo authoring
+**No bake step.** Edits are live — play and edit in the same surface. Tempo curve is interpolated per-sample between control points at runtime.
 
-Three ways to set tempo:
+## Data model
 
-1. **Numeric BPM per bar** — 120, 144, 96, etc.
-2. **Note=BPM notation** — `♩=120`, `♪=180`. For compound or unusual time signatures.
-3. **Musical terms** — "Andante," "Allegro," "Moderato." Mapped to BPM ranges with manual override.
+The click track is part of the song document. Same architectural pattern as the patch graph: data is source of truth, no compiled artifacts.
 
-Each bar can carry a different tempo. The transition between two bars uses a curve (see below).
+```ts
+ClickTrack {
+  bars: Bar[],
+  events: ClickEvent[],          // points on tempo curve
+  vamps: VampRegion[],
+  repeats: RepeatRegion[],
+  cuePoints: CuePoint[]
+}
 
-## Tempo curve graph
+Bar {
+  number: number,
+  timeSignature: TimeSig,
+  accentPattern: number[]        // beat emphasis
+}
 
-A continuous tempo-vs-bar visualization. Points are draggable. Between points, the curve uses one of:
+ClickEvent {
+  bar: number,                   // with fractional beat
+  tempo: number,                 // BPM
+  curveType: "linear" | "instant" | "ease-in" | "ease-out" | "manual"
+}
 
-- **Linear** — straight ramp between tempos
-- **Instant** — tempo jumps at the bar boundary
-- **Ease-in / ease-out** — accelerating/decelerating curves
-- **Manual** — drawable freeform curve for unusual rallentandos
+VampRegion {
+  startBar: number,
+  endBar: number,
+  label: string,
+  loopCount: "infinite" | number
+}
 
-Right-click a region → "Apply rit" / "Apply rall" pre-fills a curve.
+RepeatRegion {
+  startBar: number,
+  endBar: number,
+  label: string,
+  repeatCount: number
+}
 
-## Vamps, repeats, codas
+CuePoint {
+  bar: number,
+  label: string                  // "Verse 1", "Chorus", "Bridge"
+}
+```
 
-- **Vamp region** — a marked region of time that loops indefinitely until a footswitch "end vamp" signal fires. The transport completes the current loop, then proceeds past the end marker.
-- **Repeat region** — a marked region that loops a specified number of times, then proceeds.
-- **Coda** — a `D.S. al Coda` / `Coda` jump pair. The transport follows the jump on a configured trigger (a specific cue point, or a footswitch).
+## Editor UI
 
-All three are encoded as **marker pairs** in the timeline. They're visible at all zoom levels.
+### Tempo curve graph
 
-## Cue points
+Horizontal graph spanning the song:
+
+- Tempo axis (Y) on the left
+- Bar axis (X) on the bottom
+- Line shows tempo across bars
+- Click anywhere on the line → adds a control point
+- Drag points up/down to change tempo at that bar
+- Right-click a point → curve type (instant / linear / ease-in / ease-out / manual bezier)
+
+### Marker overlays
+
+Vamps (looping bracket), repeats (Coda symbol), cue points (flag) — visible at all zoom levels.
+
+### Side panel
+
+Bar list with editable per-bar BPM + time signature + accent pattern.
+
+### Input modes per click event
+
+- **Numeric BPM** — `80`
+- **Note=BPM notation** — `♩=80`, `♩.=100`, `♪=160`
+- **Musical term** — `Andante`, `Allegro`, `Presto` — maps to standard BPM ranges, configurable per-show
+
+### Rits and ralls
+
+Select a region → right-click → **Apply rit. / rall. from X to Y BPM over N bars** → choose start/end tempo, curve shape, optional resolution to next steady tempo. The editor inserts the right curve points automatically.
+
+### Audition
+
+Scrub a playhead through the click; hear in real time. Reverse scrubbing supported for finding edit points.
+
+## Vamps, repeats, codas — the theatre-specific machinery
+
+These are first-class, encoded as **marker pairs** in the timeline.
+
+### Vamps
+
+A region of time that loops indefinitely (or N times) until a footswitch "end vamp" signal fires. The transport completes the current loop, then proceeds past the end marker. Patches can be tied to "exit vamp" event for auto-advance.
+
+### Repeats
+
+A region that loops a specified number of times, then proceeds. Used for chorus repeats, refrains, etc.
+
+### Codas
+
+`D.S. al Coda` / `Coda` jump pairs. The transport follows the jump on a configured trigger (a specific cue point, a footswitch, or auto). Standard MT shorthand for "skip ahead to the tag."
+
+### Cue points
 
 Named timeline anchors. Used by:
 
 - The transport's "jump to cue" action
 - The cue system for fire-on-cue MIDI events
 - The backing tracks' transport sync (v0.13.0)
-- The conductor cam overlay (v0.11.0) — shows current cue point
+- The conductor cam overlay (v0.11.0 — shows current cue point)
 
-## Rits and ralls via region selection
+## DAW interop — SMF Type 1 with tempo map
 
-Select a bar range → right-click → **"Apply rit"** / **"Apply rall"** → choose start/end tempo, curve shape, optional resolution to the next steady tempo. The editor inserts the right curve points automatically.
+Every DAW reads/writes SMF Type 1. It's the universal format. Stardust round-trips against it.
 
-## Audition + playhead scrub
-
-A playhead drags through the timeline; release to play from that point. Audition plays the click + (if a backing track is loaded) the audio. Reverse scrubbing supported for finding edit points.
-
-## SMF Type 1 export / import
+### Export
 
 The click track exports to **Standard MIDI File Type 1**:
 
-- Tempo track with one tempo-change event per curve point
-- Bar markers as text events
+- Tempo events as `Set Tempo` meta-events (μs-per-quarter resolution = sample-accurate at any BPM)
+- Time signatures as `Time Signature` meta-events
+- Bar markers as `Marker` meta-events
 - Cue points as marker events
-- Vamps / repeats / codas encoded via **our own marker-naming convention** — `[stardust:vamp-start]`, `[stardust:vamp-end]`, `[stardust:coda-jump-to:X]`. DAWs see these as text markers; they won't loop, but the data round-trips.
+- Vamps / repeats / codas encoded via our own marker-naming convention — `vamp:start:bar17`, `vamp:end:bar24`, `coda:jump-to:X`. Most DAWs render these as labeled bar markers but won't loop them.
 
-Import is the inverse: read an SMF Type 1, parse tempo events into curve points, parse markers into bars / cues / vamps where the naming convention matches.
+### Import
 
-This makes Stardust click tracks **interoperable** with any DAW that handles SMF Type 1.
+The inverse: read an SMF Type 1, parse tempo events into curve points, parse markers into bars/cues/vamps where the naming convention matches.
 
-## What the editor doesn't do
+### What the MD workflow looks like
+
+1. Write the click in Pit's editor — bar-by-bar tempo, vamps, codas
+2. Export as SMF
+3. Import to DAW (Logic / Ableton / Cubase / Pro Tools / Reaper)
+4. Add other instruments, render audio stems
+5. Bring stems back into Pit as backing tracks
+6. Tempo stays in sync because SMF roundtripped
+
+### Scope of round-trip support
+
+| Direction | Format | Scope |
+|---|---|---|
+| Export tempo to DAW | SMF Type 1: tempo + bar markers + cue points + vamp markers | v0.12.0 |
+| Import tempo from DAW | Same SMF format | v0.12.0 |
+| Export full song (tempo + per-instrument tracks) | SMF Type 1 with N MIDI tracks | v1.x if recording lands |
+| Import full song (parsed tempo + bundled MIDI tracks as backing) | Multi-track SMF | v1.x or v2.0 |
+
+## Engine integration
+
+- Engine drives click playback + MIDI clock sync directly from click data
+- Patches can be bar-numbered → auto-advance based on click position (opt-in)
+- Vamp regions in click data + transport interaction with backing tracks ([backing-tracks](/docs/pit/features/backing-tracks/))
+
+## What this editor doesn't do
 
 - **No time signature changes mid-bar.** Time signatures live on bar boundaries.
 - **No notation rendering.** Stardust is not a notation app; sheet music belongs in forScore or its eventual replacement, [Sheets](/docs/sheets/).
-- **No groove templates** for v1.0. Quantize-to-template lives in v1.x backlog.
+- **No groove templates** in v1.0. Quantize-to-template lives in v1.x backlog.
+- **No swing/shuffle** in v1.0 — even-eighths only. Swing in v1.x.
 
 ## Related pages
 
-- [Click track](/docs/pit/features/click-track/) (the engine + bus side)
+- [Click track](/docs/pit/features/click-track/) — the engine + bus side
 - [Balance tool](/docs/pit/features/balance-tool/)
 - [Backing tracks](/docs/pit/features/backing-tracks/)
 - [Cue system](/docs/pit/features/cue-system/)

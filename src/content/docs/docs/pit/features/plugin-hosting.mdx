@@ -3,9 +3,11 @@ title: "Plugin Hosting"
 description: "Stardust hosts third-party audio plugins to provide the actual sounds. You drag a plugin (e.g. Spitfire BBC SO Discover, Surge XT, MuseSounds Strings) into a..."
 ---
 
+import { Badge } from '@astrojs/starlight/components';
+
 > Host VST3 and CLAP plugins, in sandboxed child processes so a crashing plugin never kills the show.
 
-**Status:** CLAP host shipped in v0.2.0; multi-plugin chain hosting (in-process) in v0.5.0. Out-of-process sandboxing (the reliability commitment) is v0.7.0 — [ADR-0002](https://github.com/StardustMT/stardust-workspace/blob/main/docs/adr/0002-out-of-process-plugin-sandboxing.md). VST3 + AU are v1.x or v2.0+.
+<Badge text="✅ Shipped · v0.5.0 · sandboxing v0.7.0" variant="success" />
 
 ## What it does
 

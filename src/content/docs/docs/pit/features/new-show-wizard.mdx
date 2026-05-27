@@ -1,71 +1,122 @@
 ---
 title: "New Show wizard"
-description: "Six-step guided show creation. Run once per production; produces a fully configured show ready to author."
+description: "Six-step guided show creation. Five steps are skippable; step 1 is required. Produces a fully configured .stardustshow ready to author."
 ---
 
 import { Badge, Steps } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.9.0" variant="note" />
+<Badge text="📋 Planned · v0.9.0" variant="note" />
 
 > Setting up a new show from scratch is the most error-prone moment in the workflow. The wizard makes it boring.
 
-The New Show wizard is a **modal** (not a mode) that runs when you click "New Show" from the splash screen or `File → New`. Six steps, each step is one focused decision; the result is a valid `.stardustshow` you can immediately start authoring patches in.
+## What it is
 
-## The six steps
+A **modal** (not a mode) that runs when you click *New Show* from the splash screen or `File → New`. Six steps, all skippable except step 1. Each step is one focused decision. The result is a valid `.stardustshow` you can immediately start authoring patches in.
 
-<Steps>
+## Step 1 — Show metadata (required)
 
-1. **Metadata** — Title, production name, year, music director name, optional poster image. Surfaces the [Production / Source / Distribution](/docs/pit/concepts/shows-songs-patches/) structure for revivals (default: leave Source blank).
+The only required step. Everything else is skippable.
 
-2. **Audio I/O** — Pick the audio device (input + output if separate), sample rate (auto-detected, 48 kHz default), buffer size (128 default with a CPU advisory). On Windows: WASAPI Exclusive vs ASIO selection. On macOS: just the device list.
+- **Show name** — required
+- **Subtitle / production type** — optional
+- **Venue** — optional
+- **Dates** — start, end, opening, closing (all optional)
+- **Music director credit** — optional
+- **Keys / instrument credit** — optional
+- **Show notes** — markdown, optional
 
-3. **MIDI device detection** — Scan for connected MIDI devices. The wizard lists each detected device with a label (auto-detected from device name) and a "test" button — press a key, see the activity dot. Devices can be renamed here.
+This surfaces the [Production / Source / Distribution](/docs/pit/concepts/shows-songs-patches/) metadata structure for revivals. Default: leave Source blank (it's filled in later in Show Settings if at all).
 
-4. **Pre-add rig components** — Common starting components shown as a checklist: "Main keyboard" (keys + mod wheel + pitch bend + sustain), "Footswitch (panic)", "Footswitch (advance)", "Expression pedal", "Performance Lock toggle". Each adds a pre-configured component to Setup. Custom configurations come later — this is just to get going fast.
+## Step 2 — Audio I/O
 
-5. **Songs** — Add the song list. Either type them one per line, or paste from a clipboard (smart parsing of common setlist formats: numbered lists, dashed lists, blank-line-separated). Each song starts with one empty patch.
+- **Output device** — dropdown, auto-detect, smart default = system default
+- **Sample rate** — auto / 44.1k / 48k / 96k
+- **Buffer size** — auto / 64 / 128 / 256 / 512
+- **Test tone button** — plays 1 kHz @ −18 dBFS to verify routing
+- **Configure buses now or later** — defer to a sub-wizard; default = single stereo bus "Main Out"
 
-6. **Preferences** — Autosave on/off (default on), close-blocker on/off (default on), theme (Light/Dark/System), default layout template (Blank / Minimal / Cabaret / MD Console).
+On Windows: WASAPI Exclusive vs ASIO selection with a recommendation. On macOS: just the device list (no API choice needed).
 
-</Steps>
+## Step 3 — MIDI inputs
 
-After step 6, the wizard produces a `.stardustshow` and opens it in Program mode.
+- **Auto-detected MIDI inputs** listed with a light-up activity indicator
+- **Per-input action** — *Add to rig as keyboard / pads / pedal / leave unassigned*
+- **Light up which input is which** — flash indicator when user plays a key; helps identify devices when you have three keyboards plugged in
+- **Skip** + add manually in Setup → Rig later
+
+The activity-indicator approach beats "which port is which?" — most MIDI devices report unhelpful names (*"MIDI Device 1"*, *"USB Audio Device"*).
+
+## Step 4 — Pre-add rig components (optional)
+
+- **Scrollable list** of components in the user's global library
+- **Multi-select** to drop into the new show's rig
+- Quick search/filter
+- If the global library is empty: shown but skippable with a *"build your first rig component"* hint
+
+This is where saved rigs pay off. An MD who has built a compound RD-2000 (88-key + pitch wheel + mod wheel + expression pedal + sustain + footswitch + damper pedal) once can drop it into every show after that.
+
+## Step 5 — Songs
+
+- **Add songs one at a time** (name + number)
+- **Bulk-add via paste** — textarea where each line becomes a song:
+  ```
+  1. Overture
+  2. Skid Row
+  3. Mushnik & Son
+  ...
+  ```
+  Smart parsing handles numbered lists, dashed lists, blank-line-separated.
+- **Reorder via drag**
+- **Skippable** — empty show is valid
+
+## Step 6 — Preferences
+
+- **Autosave** — checkbox, **default on**, interval (1m / 5m / 15m / on-blur)
+- **Tempo default for new songs** — default 120 BPM
+- **Confirm patch changes during Live** — default **off** (MainStage style instant); opt-in confirm available for safety
+- **Theme** — Light / Dark / System (default System)
+
+## Wizard exit
+
+- **Create Show** → opens the empty-but-configured show in Setup → Rig mode
+- **Skip and use defaults** → creates show with metadata only, jumps to Setup → Rig
 
 ## What's not in the wizard
 
 These belong to Setup or Program mode, after the show exists:
 
-- Bus routing — uses defaults (main mix, IEM mix, click bus, conductor bus)
-- Plugin chains — every patch starts empty; you fill them in
-- Click tracks — added per-song in Program mode (v0.8.0+)
-- Layout details — uses the chosen template; refined in v0.11.0 layout editor
+- **Bus routing details** — uses defaults from step 2 (main mix, IEM mix, click bus, conductor bus)
+- **Plugin chains** — every patch starts empty; you fill them in
+- **Click tracks** — added per-song in Program mode (v0.8.0 engine; full editor v0.12.0)
+- **Layout details** — uses the chosen template; refined in v0.11.0 layout editor
 
-The wizard's job is to get you from zero to "I can start authoring" in under 5 minutes. Anything more belongs to the dedicated screens.
+The wizard's job is to get you from zero to *"I can start authoring"* in under 5 minutes. Anything more belongs to the dedicated screens.
 
 ## Saved choices carry forward
 
-Several wizard choices are **per-user, not per-show**:
+Several wizard choices are **per-user, not per-show** — they pre-fill the next wizard run:
 
-- Default audio device + buffer
-- Default MIDI device list
+- Default audio device + buffer + sample rate
+- Default MIDI device list (which devices to enable + how to label them)
 - Default theme
 - Default rig component checklist (your typical starting kit)
 
-These get saved to user preferences and pre-fill the next wizard run. The first wizard run is the longest; subsequent runs are mostly clicking Next.
+The first wizard run is the longest. Subsequent runs are mostly clicking Next.
 
 ## Edge cases handled
 
-- **No audio device available** — wizard surfaces the error and offers to continue with a stub device (you can configure audio later in Setup).
-- **No MIDI devices connected** — wizard prompts to plug in and rescan, or continue without and add in Setup.
-- **Existing show with same title** — wizard prompts to rename or open the existing show.
-- **User closes mid-wizard** — partial state is discarded; nothing on disk.
+- **No audio device available** — wizard surfaces the error and offers to continue with a stub device (configure audio later in Setup)
+- **No MIDI devices connected** — wizard prompts to plug in and rescan, or continue without and add in Setup
+- **Existing show with same title** — wizard prompts to rename or open the existing show
+- **User closes mid-wizard** — partial state discarded; nothing on disk
 
 ## Visual style
 
-The wizard is one of the few full-modal experiences in Pit. Sidebar of step indicators on the left, focused panel on the right, Back / Next / Cancel at the bottom. Inspired by the better installers, not the bad ones.
+The wizard is one of the few full-modal experiences in Pit. Sidebar of step indicators on the left, focused panel on the right, **Back / Next / Cancel** at the bottom. Inspired by the better installers, not the bad ones.
 
 ## Related pages
 
-- [Splash screen](/docs/pit/screens/) (post-v0.9.0)
+- [Splash screen](/docs/pit/screens/) (v0.9.0)
 - [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
 - [Device profiles](/docs/pit/features/device-profiles/)
+- [Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)

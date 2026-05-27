@@ -1,53 +1,116 @@
 ---
 title: "Show Control"
-description: "The v2.0+ vision: Pit as the hub for theatre show control. MSC, OSC, Art-Net/sACN, LTC, MTC, and a dedicated cue panel."
+description: "The v2.0+ vision: Pit as the brain of a full theatre show. MSC, OSC, Art-Net/sACN, LTC, MTC, network discovery, and a dedicated cue list runtime."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="v2.0+" variant="tip" />
+<Badge text="💭 v2.0+" variant="tip" />
 
-> If Pit becomes the laptop running the show, the obvious next move is making Pit *run the show* — sound, lights, projection, automation, all triggered from one canonical timeline. That's Show Control.
+> When you advance a patch in Pit, the lighting console fires its next cue, QLab triggers a sound effect, ProPresenter advances a slide, and the haze hits on Art-Net. One canonical timeline, many outputs.
 
-This is a **v2.0+ vision page** — not a v1.0 commitment. It exists so the architectural decisions in v0.1.0 through v1.0 don't accidentally close the door.
+This is the **v2.0+ vision**. The v1.0 architecture is deliberately decided so it doesn't paint us into a corner: out-of-process plugins, transport state machine, theatre-vocabulary data model, allocation-free engine. All of those carry over directly into a Show Control surface.
 
-## The protocols
+## The premise
 
-Theatre show control isn't one protocol; it's a stack:
+Theatre show control is fragmented:
 
-| Protocol | What it does | Target user |
+- **Sound** — QLab, SCS, custom rigs
+- **Lighting** — lighting consoles (ETC Eos, GrandMA, ChamSys) running their own cue lists
+- **Automation** — vendor-specific automation systems (Stage Technologies, Niscon, Tait)
+- **Video** — Watchout, Disguise, QLab again
+- **Backstage cueing** — stage manager calls, paging, comm
+- **Cross-system sync** — LTC, MTC, Word Clock, GenLock
+
+Most shows have **at least two systems with overlapping cue lists**. The stage manager calls *"Sound Cue 42 GO"* — the sound op presses a button on QLab, the lighting op presses a button on Eos, and if anyone misses or fat-fingers, the show falls out of sync.
+
+A unified Show Control layer says: **one timeline, many outputs**. Pit's transport drives MSC out to the LX console, OSC out to QLab, MTC to the video system, LTC to the audio recorder, DMX out to atmospherics — all from a single cue list authored by the MD.
+
+## Protocols (pro-theatre standard)
+
+| System | Protocols |
+|---|---|
+| **Lighting** | DMX-512, Art-Net / sACN (DMX over Ethernet), OSC for newer consoles |
+| **Sound cues + playback** | MSC (MIDI Show Control, 1991), OSC (QLab), Dante (audio over Ethernet) |
+| **Video / projection** | OSC (Hippotizer, Resolume, ProPresenter), NDI for content |
+| **Automation** | Proprietary per vendor; some MSC support |
+| **Comms** | ClearCom / Riedel — separate analog/digital intercom |
+| **Cross-system sync** | LTC (audio timecode), MTC (MIDI timecode), Word Clock, GenLock |
+
+These are all open standards (or open-enough) — Pit can speak them with reasonable Rust crates + careful protocol implementation.
+
+## Latency budget — cross-system show control
+
+| System | Tolerable | Ideal | Achievable on Cat6 LAN |
+|---|---|---|---|
+| Lighting cue advance | <50 ms | <20 ms | <2 ms |
+| Audio cue trigger | <20 ms | <10 ms | <2 ms |
+| Video cue trigger | <100 ms | <50 ms | <5 ms |
+| Sample-accurate audio sync | <1 ms | <0.5 ms | requires word clock |
+| Cross-system show step | <33 ms (1 frame @ 30 fps) | <16 ms | <2 ms over wired |
+
+**Network is rarely the problem.** A properly-configured show network (wired Cat6, managed switch with QoS, dedicated VLAN) hits sub-ms. Actual bottlenecks:
+
+- **WiFi** — 5–30 ms with variance. Don't use for cues. OK for non-critical status displays.
+- **Receiving devices** — lighting consoles often add 10–30 ms internal cue processing; QLab adds 5–10 ms
+- **Cellular** — 30–100 ms+, never
+
+## Effort breakdown
+
+| Capability | Effort | Notes |
 |---|---|---|
-| **MSC** (MIDI Show Control) | Trigger cues on lighting consoles, sound consoles, automation systems | Lighting / sound op |
-| **OSC** (Open Sound Control) | General-purpose UDP messaging — Stage Manager apps, custom integrations | Custom workflows |
-| **Art-Net / sACN** | Network DMX | Direct lighting control |
-| **LTC** (Linear Time Code) | SMPTE timecode via audio | Sync to video / film playback |
-| **MTC** (MIDI Time Code) | SMPTE timecode via MIDI | Sync to DAWs, video decks |
+| OSC sender / receiver | ~3 days | well-specced UDP, mature Rust crates |
+| MSC sender | ~3 days | well-specced MIDI subset |
+| Art-Net / sACN sender (DMX) | ~1 week | open standards, libraries exist |
+| LTC encoder + decoder | ~2 weeks | audio-based, careful sync |
+| MTC | ~3 days | trivial |
+| Network discovery (Bonjour / Avahi) | ~1 week | auto-find consoles on network |
+| Show Control panel UI | ~3 weeks | per-cue-system mapping editor; the hard part |
+| Show Control templates (QLab, Eos, MA3) | ongoing | per-system spec packs |
 
-A v2.0+ Stardust Show Control surface implements all five as first-class engine sources/sinks, with a cue-list editor and a dedicated control panel.
+**Total: ~8–12 weeks for credible v1 Show Control.** Slots v2.0 as a major theme.
 
-## Why this fits Stardust
+## The cue-list editor (v2.0+)
 
-Pit already has:
+A new Program-mode surface dedicated to the cue list:
 
-- A precise transport with bar/beat/cue-point semantics
-- An engine that respects allocation-free realtime constraints
-- A patch graph with named sources and sinks
-- A theatre-vocabulary UX (Show / Song / Patch — not Project / Track / Channel)
+- Cues are timeline anchors (extends the v0.12.0 cue-point model)
+- Each cue can fire any combination of MSC / OSC / DMX / LTC offset / etc.
+- Cues can be grouped (Sound 42 + LX 42 fire together)
+- Cues can be conditional (*"if backing track is at bar 17, fire"*)
+- Cue list is exportable to QLab format for round-trip with sound ops
 
-Adding MSC / OSC / DMX outputs is mostly engine plumbing — they slot into the existing transport. The hard part is the UX: a cue list editor that's usable by lighting and sound ops, not just keyboardists.
+**The UX is the hard part.** Lighting ops and sound ops are the target users, not just keyboardists — this surface must be usable by people who didn't author the Pit show. Most of the v2.0+ scope is UX iteration, not protocol coding.
 
-## Why this is v2.0+, not earlier
+## Integration with Stardust Stage
 
-- v1.0 has to be *a great keyboard host first*. Show Control before the keyboard host is solid is feature creep.
-- The cue-list UX is its own ~8–12 week effort.
-- The hardware-integration testing matrix (real LX consoles, real automation systems) is large and expensive.
-- Some of the protocol surface depends on the post-1.0 Stardust **Stage** runtime — having stage management and pit running on the same data model is what makes deep integration possible.
+The post-1.0 [Stardust Stage](/docs/ecosystem/roadmap/) runtime is the Stage Manager's tool. Cue calls happen there, but the *fire* of those calls can be:
 
-## What we're not committing to
+- **Manual** — SM taps a button
+- **Auto-fired** by the Pit timeline (if the show is timeline-locked)
+- **Conditional** — SM arms; Pit fires on cue point
 
-- A QLab clone. QLab is an excellent app; we're not trying to replace it. Show Control in Stardust is for shows that want **one canonical timeline** running both the pit and the cues.
-- DMX fixture libraries. If Pit needs DMX, it's at the protocol level — fixture knowledge belongs in [Stardust Lighting](/docs/ecosystem/roadmap/) (also speculative).
-- A theatre ERP. Cue lists, yes. Production budgets, no.
+Having Pit and Stage on the **same data model** matters here. A cue list authored in Pit's editor is also visible in Stage; updates from either side propagate. This is post-v1.0 because Stage doesn't exist yet — but the data model for cues needs to be roughly right in v1.0's basic cue system (v0.8.0) so we're not painting into a corner.
+
+## Viability by production scale
+
+| Tier | Viability | Notes |
+|---|---|---|
+| **School / community / regional / small touring** | ✅ Fully viable software-only | Stardust as show brain works end-to-end |
+| **Mid-size regional / off-Broadway** | ✅ Viable | Supplement with hardware where pros prefer it (talkback panels, hardware GO buttons) |
+| **Broadway / large touring** | ⚠️ Viable for keys-and-musician layer | Full show control would typically still want a dedicated stage manager rig (Cuelab or similar) for risk isolation. Stardust integrates *into* that rig rather than replacing it. |
+
+## Where custom hardware would help (but isn't required)
+
+- **Hot-spare redundancy** — Broadway wants two-of-everything with auto-failover. Software-possible (two laptops + MIDI A/B switcher) but a purpose-built failover box is cleaner. Listed in v2.0+ backlog as [Hot-spare rig](/docs/pit/features/hot-spare-rig/).
+- **Hardware show buttons** — physical *Go* buttons feel right for stage management. Stream Deck (v0.15.0 extension API) addresses most cases.
+- **Genlock / sample-accurate sync** — requires Word Clock or hardware sync source. Software can request but can't guarantee sample-level without hardware reference.
+
+## What this is NOT
+
+- **A QLab clone.** QLab is excellent for what it is. Show Control in Stardust is for productions that want **one canonical timeline** running both the pit and the cues — not a QLab replacement.
+- **A theatre ERP.** Cue lists yes; production budgets no.
+- **DMX fixture libraries.** If Pit needs DMX, it's at the protocol level — fixture knowledge belongs in [Stardust Lighting](/docs/ecosystem/roadmap/) (also speculative).
 
 ## Adjacent work that has to land first
 
@@ -58,6 +121,7 @@ Adding MSC / OSC / DMX outputs is mostly engine plumbing — they slot into the 
 
 ## Related pages
 
-- [Cue system](/docs/pit/features/cue-system/) — the current v1.0-scoped cue surface
+- [Cue system](/docs/pit/features/cue-system/) — the current v0.8.0-scoped cue surface
 - [Click track editor](/docs/pit/features/click-track-editor/)
 - [Ecosystem roadmap](/docs/ecosystem/roadmap/)
+- [Extension API](/docs/pit/features/extension-api/)

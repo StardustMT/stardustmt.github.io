@@ -1,67 +1,111 @@
 ---
 title: "Engine monitor"
-description: "The widget that tells you what the engine is doing in real time — CPU, memory, xruns, peak, plugin status, latency, uptime."
+description: "The Perform-mode widget that tells you what the engine is doing in real time. CPU, RAM, xruns, peak, plugin status, latency, uptime — surfaced where the keyboardist can see it before the audio drops out."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.11.0" variant="note" />
+<Badge text="📋 Planned · v0.11.0" variant="note" />
 
-> Engine monitor is the dashboard you watch while the audience is still filing in.
+> A spike from 60% to 95% CPU 30 seconds before the downbeat is something you want to see *now*, not discover when the audio drops out during the overture.
 
-A widget you place on your Perform-mode layout (typically tucked into a corner) that surfaces everything the engine knows about itself.
+## What it is
 
-## What's displayed
+A widget you place on your Perform-mode layout (typically tucked into a corner) that surfaces everything the engine knows about itself. Two display modes:
 
-- **CPU** — engine-thread CPU usage as a percentage
-- **RAM** — total resident memory used by the engine + all sandboxed plugins
-- **xrun count** — number of audio underruns since the engine started (incremented per dropout)
-- **Peak** — peak output level since last reset (dBFS), color-coded green/yellow/red
-- **MIDI activity** — per-device dots; a dot lights for any MIDI message received in the last 100 ms
-- **Plugin status** — each loaded plugin's state (running / loading / crashed / quarantined)
-- **Crash count** — total plugin crashes this session
-- **Latency** — measured round-trip latency, refreshed every 5 seconds
-- **Uptime** — how long the engine has been running (since app start or last engine restart)
+- **Compact** — single status pill: green/yellow/red dot + the worst-offending metric. Fits in a corner of a busy layout.
+- **Expanded** — the full field table below. For when you have screen space and want the full picture.
 
-**Not displayed:** thermal data. Cross-platform thermal access is unreliable, and "engine got too hot" is not a useful signal during a show — by the time it matters, the dropouts have already happened.
+Tap/click toggles between them.
+
+## Full field table
+
+| Field | Source | Compact | Expanded |
+|---|---|---|---|
+| CPU % (overall) | OS process stats | ✅ single number + 60s sparkline | ✅ |
+| CPU % (per plugin) | Per-thread sampling | — | ✅ collapsed by default; expandable |
+| RAM (resident overall) | OS process stats | — | ✅ |
+| RAM (per plugin) | Sandbox process stats (post-v0.7.0) | — | ✅ once sandboxing lands |
+| **Audio xruns / dropouts** | cpal callback overrun counter | ✅ **critical metric** | ✅ |
+| Audio peak / clip per output | Per-output meter | — | ✅ |
+| Audio roundtrip latency | Buffer size × sample rate calc | ✅ single ms number | ✅ |
+| MIDI input activity per device | Event-rate counter | ✅ small activity light per device | ✅ |
+| Plugin status per plugin | Sandbox supervisor heartbeat | — | ✅ alive / quarantined / crashed |
+| Plugin crash count (session) | Counter | ✅ red if > 0 | ✅ |
+| Uptime since Go Live | Counter | — | ✅ |
+| Disk I/O (backing tracks) | Per-track byte counter | — | ✅ only when backing tracks active |
+
+### What's deliberately not on the list
+
+- **Thermal pressure / CPU temperature** — fragile cross-platform (macOS vs Windows vs Linux differ wildly), more hassle than it's worth, and "engine got hot" is not a useful signal mid-show. By the time it matters, the dropouts have already happened.
+- **Network status** — Pit is local-first. Nothing performance-critical depends on network.
 
 ## Color thresholds
 
-The widget uses traffic-light colors so the at-a-glance signal is unambiguous:
+Traffic-light colors. Unambiguous at-a-glance.
 
-| Metric | Green | Yellow | Red |
+| Metric | 🟢 Green | 🟡 Yellow | 🔴 Red |
 |---|---|---|---|
 | CPU | < 50% | 50–80% | > 80% |
 | RAM | < 4 GB | 4–6 GB | > 6 GB |
-| xruns | 0 | 1–5 | > 5 |
+| Xruns (this session) | 0 | 1–5 | > 5 |
 | Peak (dBFS) | < −6 | −6 to −3 | > −3 |
 | Latency (ms) | < 10 | 10–20 | > 20 |
 | Crash count | 0 | 1 | ≥ 2 (quarantine kicks in) |
 
-Thresholds can be customized per-show in the widget settings.
+Thresholds customizable per-show in the widget settings.
 
-## Compact / expanded modes
+## Compact mode pill
 
-The widget has two layouts:
+The compact display is a single horizontal pill:
 
-- **Compact** — a single status pill: green/yellow/red dot + the worst-offending metric. Fits in a corner of a busy layout.
-- **Expanded** — the full table above. For when you have screen space and want the full picture.
+```
+🟢 CPU 42% · 0 xrun · 8ms
+```
 
-Tap/click toggles between them.
+When something goes yellow or red, the pill switches to that field as the headline:
 
-## Why this matters
+```
+🟡 CPU 78% · 0 xrun · 8ms        # CPU yellow
+🔴 1 xrun · CPU 65% · 8ms        # xrun count red
+```
 
-Live performance is unforgiving. A spike from 60% to 95% CPU 30 seconds before the downbeat is something you want to see *now*, not discover when the audio drops out during the overture. The monitor surfaces these signals where they can actually do you good — in your eye line.
+The worst-priority metric wins. Tap to expand.
 
-## What feeds it
+## Reactive behavior
 
-- Engine sends metrics via Tauri events at 10 Hz
-- Plugin status comes from the watchdog (v0.7.0 sandboxing)
-- Latency comes from the same path as the [latency display](/docs/pit/reliability/latency-budget/) in audio settings
+- Engine pushes metrics via Tauri events at 10 Hz
+- Plugin status comes from the watchdog (introduced in v0.7.0 sandboxing)
+- Latency value comes from the same path as the [latency display](/docs/pit/reliability/latency-budget/) in audio settings
 - MIDI activity is fed from the per-device input thread (v0.6.0 hardware MIDI binding)
+- Sandboxing-dependent fields populate after v0.7.0 ships
+
+## Why this matters mid-show
+
+Live performance is unforgiving. A musician can't pause the show to check Activity Monitor. The monitor puts the signals in their eye line:
+
+- **MIDI activity dots** tell you instantly whether a stuck note is hardware (no dot) or software (dot, no sound)
+- **Xruns climbing** during a song means buffer is undersized for your current patch chain — change buffer next intermission
+- **CPU sparkline** showing growth over the show means a plugin is leaking somewhere — restart at intermission
+- **Latency** shifting mid-show means a device renegotiated — investigate immediately
+- **Plugin status** going red on a specific plugin tells you what to drop from your layout
+
+These are the signals a working musician already mentally tracks — Stardust makes them visible instead of guessed.
+
+## Widget config
+
+Per-widget options:
+
+- **Mode** — Compact / Expanded / Auto-collapse (compact unless an alert is active)
+- **Show only critical metrics** — toggle to hide everything but xruns + plugin status + latency
+- **Threshold overrides** — adjust green/yellow/red thresholds per metric
+- **MIDI activity dots** — show which devices (all / specific list / none)
+- **Per-plugin breakdown** — expand by default / collapse by default
+- **Update rate** — 10 Hz default; reduce to 1 Hz to save UI thread cycles on weaker hardware
 
 ## Related pages
 
 - [Latency budget](/docs/pit/reliability/latency-budget/)
 - [Plugin crash isolation](/docs/pit/reliability/plugin-crash-isolation/)
 - [Performance lock](/docs/pit/reliability/performance-lock/)
+- [Hot-plug resilience](/docs/pit/reliability/hot-plug/)

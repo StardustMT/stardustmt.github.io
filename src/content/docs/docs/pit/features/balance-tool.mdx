@@ -1,97 +1,200 @@
 ---
 title: "Balance tool"
-description: "Measure, compare, and balance every patch in the show by perceptual loudness. LUFS-based, offline render, no speakers required."
+description: "Measure, compare, and level-match every patch in the show by perceptual loudness. LUFS-based, offline render, no speakers required."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.12.0" variant="note" />
+<Badge text="📋 Planned · v0.12.0" variant="note" />
 
 > The patch you spent two hours on at home is 6 LU louder than the patch before it. Half the audience can hear it. Nobody on stage tells you. The balance tool measures it before the audience does.
 
-Mixing a show by ear is hard. Every patch was authored at a different time, sometimes weeks apart, on different reference material, and the result is always slightly uneven. The balance tool turns "is this patch louder than that one?" into a measurement — done offline, no speakers, no late-night-by-yourself second-guessing.
+## The problem
 
-## What it measures
+Patches sound different at the same MIDI velocity. A bright sawtooth synth at velocity 100 is +12 dB louder than a piano at the same velocity. A pad with slow attack feels quieter than a percussive piano even at identical RMS levels. Without balancing, the keys player has to ride the volume fader for every patch change in every show.
 
-The tool renders each patch through a deterministic **reference sequence**, captures the audio, and runs **ITU-R BS.1770** loudness analysis (via the [`ebur128`](https://crates.io/crates/ebur128) Rust crate). For every patch it produces:
+Mixing by ear is hard. Every patch was authored at a different time, sometimes weeks apart, on different reference material, and the result is always slightly uneven. The balance tool turns *"is this patch louder than that one?"* into a measurement — done offline, no speakers, no late-night-by-yourself second-guessing.
 
-- **Integrated LUFS** — perceptual loudness over the reference sequence
-- **True Peak (dBTP)** — the highest inter-sample peak, in dBFS
-- **Loudness Range (LRA)** — dynamic range across the sequence
-- **Per-instrument-node loudness** — when a patch has multiple instruments mixed, each gets its own LUFS reading
+## The measurement: LUFS
 
-All measurement is **offline render** — patches are run through the engine to a buffer, not to speakers. No noise out of your monitors at 3am.
+Loudness ≠ peak level. The tool uses **LUFS** (Loudness Units Full Scale, defined in EBU R128 / ITU-R BS.1770):
 
-## Scopes of measurement
+- **Frequency weighting** — the human ear is more sensitive to mids than bass/treble. LUFS applies a K-weighting filter (high-shelf + high-pass) to match perception
+- **RMS-style integration** — not instantaneous peak, but 400 ms windowed mean
+- **Gating** — silence between notes doesn't count toward the integrated value
 
-<Badge text="Intra-patch" variant="tip" /> Per-instrument-node within a patch — flags one piano sample 4 LU louder than another within the same chain.
+Three flavors are reported per patch:
 
-<Badge text="Cross-patch" variant="tip" /> Within a song — flags patches inside one song that sit at different perceived levels.
-
-<Badge text="Show-wide audit" variant="tip" /> Across the whole show — produces a sorted list of every patch from quietest to loudest, with the show median as the reference.
-
-## Reference sequences
-
-Loudness depends on what's played. The tool uses three deterministic reference sequences:
-
-| Sequence | Material | When to use |
+| Metric | Window | What it tells you |
 |---|---|---|
-| **Sustain** | Two octaves of sustained C major | Pads, strings, organs |
-| **Attack** | Sixteenth-note runs across two octaves | Pianos, plucks, mallets |
-| **Dynamic** | Velocity sweep v40 → v120 + held chord | Anything where velocity response matters |
+| **Momentary LUFS** | 400 ms | What's playing right now |
+| **Short-term LUFS** | 3 seconds | Sustained sections |
+| **Integrated LUFS** | Full duration | Headline number — the patch's "loudness" |
 
-Each patch is measured against all three. The lower-bound LUFS (quietest measurement) is the patch's "rest" loudness; the upper-bound is its "fullness."
+Plus two complementary numbers:
 
-**Velocity normalization for v1.0:** measurements use velocity **v80** consistently. v1.x adds a three-point measurement (v40 / v80 / v120) for full velocity-curve characterization.
+- **True Peak (dBTP)** — peak after oversampling. Catches inter-sample peaks that simple dBFS misses
+- **Loudness Range (LRA)** — difference between loud + quiet sections. Measures dynamic range
 
-## A/B compare
+The tool uses the [`ebur128`](https://crates.io/crates/ebur128) Rust crate. Drop in.
 
-Pick a **reference patch** (typically the show's signature patch — the lead piano, the main pad). Every other patch gets compared against it:
+## Within a patch (intra-patch)
 
-- Δ LUFS — louder / quieter than reference
-- Δ True Peak — peakier / softer-peaked than reference
-- Δ LRA — more / less dynamic than reference
+Patches can have multiple instrument layers — split-keyboard piano below + strings above, chord patch layering piano + pad. Each `instrument.*` node in the patch graph is measured **independently**:
 
-Click any patch → instant audition of reference followed by patch, level-matched, so you can hear the timbre difference without the loudness difference clouding the judgment.
+1. Play a standardized reference MIDI sequence through *each* instrument node
+2. Capture audio from that node's output edges (engine in offline-render mode)
+3. Compute integrated LUFS per instrument
 
-## Trim suggestions
+**Result:** *"Your piano layer is −14 LUFS; your strings layer is −19 LUFS — strings are 5 LU quieter."*
 
-For each patch, the tool computes a **per-patch trim** in dB that would bring it to the show median. Click to apply, or apply all at once, or override manually. Trims are stored as part of the patch's mix-node config — they survive load/save and travel with the show file.
+**UX:** per-instrument trim sliders appear inside the patch with current values. An **Auto-balance** button suggests trims to equalize against the loudest layer (or against a user-chosen target).
 
-## Tilt EQ per patch
+## Within a song (cross-patch)
 
-Sometimes a patch isn't *louder* — it's *brighter*, and brightness reads as loudness in a busy mix. The tool surfaces a single **tilt EQ** knob per patch:
+For every patch in the song:
 
-- Negative tilt → darken (low shelf up, high shelf down)
-- Positive tilt → brighten (low shelf down, high shelf up)
+1. Play reference sequence
+2. Measure integrated LUFS
+3. Show as a bar chart — x-axis = patch order, y-axis = LUFS
 
-One knob, perceptually centered. Saved as part of the patch.
+Patches more than 3 LU from the song median are highlighted yellow; more than 6 LU red.
 
-## Show-wide audit report
+**Result:** *"Patch 4 'Soft Strings' is −22 LUFS; song median is −16 LUFS. Suggest +6 dB trim."*
 
-After running the audit, the tool produces a sortable table:
+**User options:**
+
+- **Match to song median** (auto)
+- **Match to specific patch** (pick reference)
+- **Match to target loudness** (e.g., −16 LUFS for typical MT show)
+- **Manual per-patch trim** (override the suggestion)
+
+## Across show (show-wide audit)
+
+Same measurement, spans every song. Show-wide median. Auto-balance suggests trims to bring every patch within ±3 LU of show median.
 
 | Patch | Song | LUFS | dBTP | LRA | Δ from median | Suggested trim |
 |---|---|---|---|---|---|---|
-| Strings — Verse | Helpless | -18.2 | -3.1 | 6 | +1.8 | -1.5 dB |
-| Piano — Chorus | Helpless | -22.0 | -5.4 | 8 | -2.0 | +2.0 dB |
-| Brass stab | My Shot | -14.5 | -1.0 | 3 | +5.5 | -5.0 dB |
-| ... | ... | ... | ... | ... | ... | ... |
+| Strings — Verse | Helpless | −18.2 | −3.1 | 6 | +1.8 | −1.5 dB |
+| Piano — Chorus | Helpless | −22.0 | −5.4 | 8 | −2.0 | +2.0 dB |
+| Brass stab | My Shot | −14.5 | −1.0 | 3 | +5.5 | −5.0 dB |
 
-Any patch ±3 LU from the median is highlighted yellow; ±6 LU is red. The "Apply all suggestions" button trims everything to within 1 LU of the median.
+"Apply all suggestions" trims everything to within 1 LU of the median.
+
+## Reference sequences — three flavors
+
+Loudness depends on what's played. Three deterministic reference sequences cover the common cases:
+
+| Sequence | Material | When to use |
+|---|---|---|
+| **Sustain** | Hold a 5-note chord for 4 seconds | Pads, strings, organs |
+| **Attack** | 8 staccato notes at consistent velocity | Pianos, plucks, mallets |
+| **Dynamic** | Velocity sweep v30 → v60 → v90 → v120 + held chord | Velocity-response characterization |
+
+Each patch is measured against all three. The default for the cross-patch bar chart is the integrated LUFS of the **sustain sequence at velocity 80**. The other two surface as supplementary columns.
+
+## Velocity handling — the tricky bit
+
+Two approaches considered. v1.0 ships A; v1.x adds B.
+
+### A. Velocity-normalized (v1.0)
+
+- Always measure at **velocity 80**
+- Trim adjustments are static — single per-patch gain
+- Works well when patches have similar velocity response
+
+### B. Velocity-curve (v1.x)
+
+- Measure at **velocity 40, 80, and 120**
+- Show three loudness numbers per patch
+- Identifies patches with weird velocity curves (e.g., piano with crushed dynamics)
+- Tool suggests both per-patch trim AND per-patch velocity curve adjustment
+
+The architecture from A carries over to B unchanged — same offline render plumbing, just three sequences per measurement instead of one.
+
+## Attack / transient handling
+
+Patches with huge initial transients (piano hammer, percussive synths) defeat integrated LUFS averaging. The tool surfaces both:
+
+- **True Peak (dBTP)** catches the transient
+- **Integrated LUFS** doesn't (window averages it out)
+- Both numbers visible
+- Warning when patches have wildly different dynamic ranges: *"Patch 3 has 20 LU loudness range; show median is 8 LU — will feel inconsistent."*
+
+## Silent measurement (offline render)
+
+The cpal audio callback can be replaced with an offline render target during measurement. The engine has two render modes:
+
+```rust
+enum RenderMode {
+  Realtime(CpalStream),
+  Offline(Vec<f32>)
+}
+```
+
+For balance measurement:
+
+1. Switch to offline mode
+2. Feed standard reference MIDI sequence per patch
+3. Capture output samples
+4. Run LUFS analysis on captured samples
+5. **No audio hits the speakers**
+6. Return to realtime mode when done
+
+This is the load-bearing piece. The tool can run at 3 a.m. with the speakers off, on every patch in a 30-patch show, in a few seconds total.
+
+### Bonus — architectural reuse
+
+The offline-render plumbing is also the foundation for:
+
+- **Performance recording** (v2.0+)
+- **MIDI bounce → audio file** (v0.13.0 — same plumbing renders a captured MIDI take through the patch chain)
+- **CI regression checks** that assert "this patch produces the same audio it did last commit"
+
+Free architectural reuse — three features sharing one piece of engine infrastructure.
+
+## A/B compare
+
+Pick a **reference patch** (typically the show's signature patch — lead piano, main pad). Every other patch gets compared against it:
+
+- Δ LUFS — louder/quieter than reference
+- Δ True Peak — peakier/softer-peaked than reference
+- Δ LRA — more/less dynamic than reference
+
+Click any patch → instant audition of reference followed by patch, level-matched, so you can hear the timbre difference without the loudness difference clouding the judgment.
+
+## Per-patch trim + tilt EQ
+
+The tool writes trim values directly into the patch's mix-node config. Trims travel with the show file and apply at runtime. No separate "balance file" to keep in sync.
+
+Sometimes a patch isn't *louder* — it's *brighter*, and brightness reads as loudness in a busy mix. A single **tilt EQ** knob per patch:
+
+- Negative tilt → darker (low shelf up, high shelf down)
+- Positive tilt → brighter (low shelf down, high shelf up)
+
+One knob, perceptually centered. Saved as part of the patch.
+
+## Performance
+
+Offline render runs much faster than realtime — CPU-bound only, no audio-clock pacing. A 5-second reference sequence per patch × 40 patches = ~5–15 seconds on a modern machine. Background job, non-blocking, can run while the user keeps authoring.
 
 ## When to run
 
 - **End of a programming session** — sanity-check what you've just authored
-- **Before tech week** — make sure the show is even-tempered before stage time
+- **Before tech week** — make sure the show is even before stage time
 - **After plugin swaps** — sample replacements often change loudness
-- **As part of pre-show validation** in v0.11.0+ — flagged patches surface in the validation dashboard
+- **As part of pre-show validation** (v0.11.0+) — flagged patches surface in the validation dashboard
 
 ## What it doesn't do
 
-- **Doesn't run during a show.** Offline only — measurement is a programming tool, not a live monitor.
-- **Doesn't change plugin internals.** Trims and tilts live in the patch's mix node, not in plugin parameters.
-- **Doesn't measure stems/buses.** v1.0 measures patch outputs; multi-bus per-channel loudness analysis is v1.x backlog.
+- **Doesn't run during a show.** Offline only — measurement is a programming tool, not a live monitor
+- **Doesn't change plugin internals.** Trims and tilts live in the patch's mix node, not in plugin parameters
+- **Doesn't measure stems/buses.** v1.0 measures patch outputs; multi-bus per-channel loudness analysis is v1.x backlog
+- **Doesn't auto-fix attack curves** in v1.0 (velocity-normalized only; full velocity-curve analysis in v1.x)
+
+## One-liner summary
+
+The tool answers "if I play any patch at velocity 80, will I have to ride the volume fader?" — by measuring LUFS through the actual engine path offline, suggesting per-patch trim values to equalize perceived loudness, with optional dimensions for velocity curve and attack character.
 
 ## Related pages
 

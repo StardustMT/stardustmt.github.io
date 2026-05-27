@@ -1,84 +1,121 @@
 ---
 title: "Button / switch rig component"
-description: "A configurable rig-level button or switch that fires an action. The catch-all controller for actions that don't fit a pedal, key, or knob."
+description: "A configurable rig primitive for any binary control — footswitch, pad button, Stream Deck key, keyboard shortcut. Configurable action, optional long-press + double-tap, debounce."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.6.0" variant="note" />
+<Badge text="📋 Planned · v0.6.0" variant="note" />
 
-> Footswitches advance patches. Expression pedals control parameters. But the panic button, the tap-tempo trigger, the "skip to next song" cue — those need a generic button. This is that button.
+> Footswitches advance patches. Expression pedals control parameters. But the panic button, the tap-tempo trigger, the *skip to next song* cue — those need a generic binary control. This is that control.
 
 ## What it is
 
-A **rig component** (in the same family as keyboards, footswitches, expression pedals, pads) that represents a single physical button or switch and the action it fires when pressed. Configurable in Setup mode; placeable as a widget in Perform mode.
+A **rig component** (same family as keyboards, footswitches, expression pedals, pads) that represents a single physical button or switch + the action it fires. Configurable in Setup mode; placeable as a widget in Perform mode.
 
-A rig component is *the controller*, not the patch graph node — see [Rig components are abstractions over hardware](/docs/pit/concepts/cascading-settings/). The patch graph references the rig component when it wants to react to its events.
+The component is *the controller abstraction*, not the patch graph node — the patch graph references the rig component when it wants to react to its events. This is the same model as every other rig primitive ([see Rig component catalog](/docs/pit/concepts/cascading-settings/)).
 
 ## Configurable actions
 
-Each button/switch component has a single configured action:
+Each button/switch has one configured action:
 
 | Action | What it does |
 |---|---|
+| **Next Patch** | Advance to next patch in current song |
+| **Prev Patch** | Step back one patch |
+| **Jump to Patch** | Direct jump to a specified patch (by name, number, or id) |
+| **Next Song** | Advance to first patch of next song |
+| **Prev Song** | Step back one song |
 | **Panic** | Engine-level all-notes-off + sustain-off across all channels |
-| **Next patch** | Advance to next patch in current song |
-| **Previous patch** | Step back one patch |
-| **Next song** | Advance to first patch of next song |
-| **Previous song** | Step back one song |
-| **Jump to patch** | Direct jump to a specified patch (by name or index) |
-| **Tap tempo** | Sets the current song's tempo (v0.8.0) |
-| **Toggle Performance Lock** | "Go Live" / "End Show" |
-| **Send MIDI** | Send a named MIDI message out (for forScore page turns, etc.) |
-| **Toggle widget** | Show/hide a named widget in the current layout |
-| **Open plugin GUI** | Open the GUI for a specific plugin in the active patch |
-| **Custom command** | Fire an extension API command (v0.15.0) |
+| **Tap Tempo** | Sets the current song's tempo (v0.8.0+) |
+| **Start Transport** | Begin transport playback (v0.13.0 backing tracks) |
+| **Stop Transport** | Stop transport |
+| **Toggle Performance Lock** | *Go Live* / *End Show* |
+| **Toggle Bus Mute** | Mute / unmute a specified bus (FOH / IEM / etc.) |
+| **Send MIDI Message** | Send a named MIDI message out (forScore page turns, etc.) |
+| **Toggle Widget** | Show / hide a named widget in the current layout |
+| **Open Plugin GUI** | Open the GUI for a specific plugin in the active patch |
+| **Custom Macro** | Fire a configured extension-API command (v0.15.0) |
 
-Adding a new action is an extension API surface (v0.15.0); shipped actions cover the common cases for v0.6.0–v1.0.
+Adding new actions is a v0.15.0 extension-API surface. Shipped actions cover the common cases for v0.6.0–v1.0.
 
 ## Hardware sources
 
-The component binds to one of:
+A single component can bind to one or more of:
 
 - **Hardware MIDI** — a specific note or CC from a specific device + channel, captured via Learn
 - **Keyboard shortcut** — a key combo on the laptop keyboard
-- **On-screen button** — tap/click in Perform mode
+- **On-screen button** — tap/click in Perform mode (always available — the widget itself is the source)
 - **Stream Deck button** — via the v0.15.0 Stream Deck extension
 
-A single component can have multiple bindings simultaneously — useful when you want the same action on both a footswitch and a Stream Deck button.
+Multiple bindings simultaneously is the normal case — same action on a footswitch AND a Stream Deck button.
+
+## Per-component config (full Part 7 spec)
+
+- **Type** — momentary / latching / toggle
+- **Action** — see table above
+- **Debounce time** — ms, default 25
+- **Long-press action** — optional secondary action, with threshold ms
+- **Double-tap action** — optional
+- **LED feedback** — if hardware supports (sysex pattern)
+- **Polarity invert** — some pedals are normally-closed; flip the sense
+- **Throttle** — max activations per second (defends against contact bounce or stuck signals)
+
+### Why all those options matter
+
+Most live-performance hosts ship a "footswitch" type with two settings (`Advance` / `Panic`) and call it done. Real-world rigs hit edge cases:
+
+- **Polarity invert** — some Boss FS-5L pedals invert vs the FS-5U; same jack, opposite signal
+- **Debounce** — contact bounce on cheap pedals produces phantom double-advances
+- **Throttle** — sustain jack stuck-on from a connector wiggle shouldn't fire 50 patch-advances per second
+- **Long-press / double-tap** — pro keys players stack actions on a single footswitch to free up hardware
+
+These are the difference between *"it usually works"* and *"it works every show."*
 
 ## Switch vs button mode
 
-- **Momentary (button)** — fires on press; default for most actions
-- **Latching (switch)** — toggles state; fires once on enter, once on leave. Used for things like Performance Lock toggle.
+- **Momentary (button)** — fires on press; default for most actions (panic, next patch, tap tempo)
+- **Latching (switch)** — toggles state; fires once on enter, once on leave. Used for things like Performance Lock toggle, Toggle Bus Mute.
 
 ## Live preview widget
 
-Each component has a configurable Perform-mode widget that shows:
+Each component has a configurable Perform-mode widget:
 
 - A large tap target (touchscreen-friendly)
 - The configured action's label
 - Visual feedback on press (animation, color flash)
 - Current state (for latching switches)
 
-The widget editor in v0.10.0 lets you customize the appearance per component.
+The widget editor in v0.10.0 lets you customize appearance per component (font, color, icon, size).
 
 ## Why this exists
 
-Without a generic button/switch component, every new action needs a bespoke widget + bespoke MIDI binding. By making the component generic and parameterized by action, the same plumbing covers panic, tap tempo, patch jump, and every future action — including extension-API ones.
+Without a generic button/switch component, every new action needs a bespoke widget + bespoke MIDI binding. By making the component generic and parameterized by action, the same plumbing covers panic, tap tempo, patch jump, bus mute, transport start, and every future action — including extension-API ones.
 
-It also gives non-MIDI hardware (Stream Deck) a natural home in the rig model.
+It also gives non-MIDI hardware (Stream Deck via v0.15.0 extension) a natural home in the rig model. A Stream Deck button is just a button/switch component with a Stream Deck source binding.
+
+## Replaces the old "footswitch actions" concept
+
+Pre-v0.6.0, footswitch behavior was hardcoded in app config. The button/switch component generalizes this:
+
+- Footswitch in pedal jack → button/switch component with hardware MIDI source
+- Stream Deck button → same component, different source
+- Keyboard shortcut → same component, keyboard source
+
+One concept, many sources, parameterized action. The old footswitch config screen retires when this lands.
 
 ## What ships in v0.6.0
 
 - Component type registered in the rig catalog
-- All built-in actions above
+- All built-in actions in the table above (those that depend on transport / tap tempo are stubs until v0.8.0)
 - Learn flow for hardware MIDI binding
-- Configurable widget for Perform mode (basic — full styling editor in v0.10.0)
+- Configurable widget for Perform mode (basic styling — full editor in v0.10.0)
 - Multiple bindings per component
+- Debounce + throttle + polarity invert + long-press + double-tap
 
 ## Related pages
 
 - [MIDI Learn](/docs/pit/features/midi-learn/)
 - [Device profiles](/docs/pit/features/device-profiles/)
 - [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
+- [Extension API](/docs/pit/features/extension-api/) — for adding custom actions in v0.15.0

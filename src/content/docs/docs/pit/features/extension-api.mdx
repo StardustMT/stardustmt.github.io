@@ -1,11 +1,11 @@
 ---
 title: "Extension API"
-description: "Hybrid TypeScript + WASM extension surface for adding UI widgets, importers/exporters, custom commands, and hardware controllers. Non-realtime in v1.0."
+description: "Hybrid TypeScript + WASM extension surface. Widgets, importers/exporters, custom commands, hardware controllers. Non-realtime in v1.0; realtime WASM DSP nodes in v2.0+."
 ---
 
 import { Badge, LinkCard } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.15.0" variant="note" />
+<Badge text="📋 Planned · v0.15.0" variant="note" />
 
 > An extension API turns the people running on Pit from users into co-authors. Done well, it's how the app outgrows what any one team can build. Done badly, it's how the app eats every reliability promise it ever made.
 
@@ -13,18 +13,26 @@ import { Badge, LinkCard } from '@astrojs/starlight/components';
 
 Extension API v1 is **non-realtime**. Extensions can do:
 
-- UI work (widgets, panels, overlays in Perform mode)
-- Importers / exporters (read foreign formats; write foreign formats)
-- Custom commands (bound to rig components, footswitches, Stream Decks)
-- Hardware controllers (USB HID, OSC clients, custom protocols)
+- New Perform widgets (e.g., *"Eventide H9 controller widget"*, *"Stream Deck button mirror"*)
+- New file-format importers / exporters (e.g., *"Import .concert from MainStage"*)
+- New rig component types (e.g., *"OSC controller"*, *"MIDI over LAN device"*)
+- New hardware controllers (Stream Deck, Loupedeck, etc.)
+- Custom commands / macros
+- Theme components
+- Marketplace integrations
+- Cloud-sync providers
+- Analytics / show-stats backends
 
-Extensions **cannot** do:
+Extensions **cannot** do (v1.0):
 
 - Anything in the audio callback
 - Anything in the realtime MIDI dispatch path
-- Anything that needs guaranteed-bounded latency
+- Anything needing guaranteed-bounded latency
+- Custom DSP nodes in the patch graph
+- New plugin-format hosts (AU host via extension is post-v1.0)
+- Custom transport handlers
 
-The realtime extension surface — custom DSP nodes in the patch graph, sample-accurate MIDI processors — is **v2.0+**. Realtime needs a verified-allocation-free contract; building that on a still-evolving engine model is a trap.
+The realtime extension surface — custom DSP nodes in the patch graph, sample-accurate MIDI processors — is **v2.0+**. Realtime needs a verified allocation-free contract; building that on a still-evolving engine model is a trap. WASI 0.2 + Component Model are making realtime WASM plausible by the v2.0 timeframe (18–24 months out from v1.0).
 
 ## Hybrid TypeScript + WASM
 
@@ -32,22 +40,32 @@ Extensions can be:
 
 | Surface | Language | Use when |
 |---|---|---|
-| **TypeScript** | TS / JS runtime in the webview | UI widgets, importers/exporters, commands. The fast path. |
-| **WASM** | Any language that compiles to WASM (Rust, Go, AssemblyScript, C++) | Compute-heavy: format parsing, MIDI analysis, custom controller protocols |
+| **TypeScript** | TS / JS runtime in the webview | UI widgets, importers/exporters, custom commands. The fast path — no compile step for authors. |
+| **WASM** | Any language that compiles to WASM (Rust, Go, AssemblyScript, C++, Zig) | Compute-heavy: format parsing, MIDI analysis, custom controller protocols |
 
-A single extension can use both — TS for UI + WASM for the heavy lifting.
+A single extension can use both — TypeScript for UI + WASM for the heavy lifting.
 
-## Sandboxing
+## Why not native modules
+
+Three reasons to avoid native-binary extensions:
+
+1. **Crashes take down the host.** Same reason VST/CLAP go out-of-process in v0.7.0. Extensions are user-installable — the average user shouldn't be diagnosing whether an extension crash bricked their show file.
+2. **Cross-platform binaries are a chore.** Every extension would need macOS + Windows + Linux × Apple Silicon + Intel variants. WASM sidesteps this entirely.
+3. **No sandboxing.** A native module can read your filesystem, hit your network, do anything. Hard to publish a marketplace on top of that liability.
+
+## Sandboxing model
 
 All extensions run **sandboxed by default**:
 
-- No native module loading (rules out the crash class)
-- No raw filesystem access — only through capability-scoped APIs (read the show, write to a designated assets dir, etc.)
-- No raw network access — only through the extension's declared capabilities
-- No process spawning
-- Resource quotas (memory, CPU time) enforced
+- **No native module loading** — rules out the crash class
+- **No raw filesystem access** — only through capability-scoped APIs (read the show, write to a designated assets dir, etc.)
+- **No raw network access** — only through declared capabilities
+- **No process spawning**
+- **Resource quotas** (memory, CPU time) enforced
 
-This rules out a class of extensions that exist in some hosts (native binary plugins, full filesystem traversal) — and rules in cross-platform portability without per-platform native module headaches.
+The host runtime is a sandboxed Web Worker (no DOM access; only message-passing to the host). Custom widgets render in an iframe with a strict CSP.
+
+This rules out a class of extensions that exist in some hosts (native binary plugins, full filesystem traversal) — and rules in cross-platform portability without per-platform native-module headaches.
 
 ## What an extension looks like
 
@@ -55,47 +73,119 @@ A `.stardustext` bundle (a folder, like a show):
 
 ```
 my-extension.stardustext/
-  manifest.json         # name, version, capabilities, entry points
-  ui/                   # TS source
-  wasm/                 # optional compiled WASM
-  assets/               # icons, images
+├── manifest.json        # name, version, capabilities, entry points
+├── ui/                  # TS source for widgets / panels
+├── wasm/                # optional compiled WASM modules
+└── assets/              # icons, images
 ```
+
+### Manifest
 
 The manifest declares:
 
-- **Capabilities** the extension needs (`read-show`, `write-show`, `network:specific-host`, `usb-hid`, etc.)
+- **Capabilities** the extension needs (`show-read`, `show-write`, `midi-out`, `network:specific-host`, `usb-hid`, etc.)
 - **Entry points** — widget IDs, command IDs, importer/exporter MIME types
 - **Compatibility** — minimum Stardust version
 
-On install, Stardust shows the user the requested capabilities and asks for explicit consent.
+On install, Stardust shows the user the requested capabilities and asks for explicit consent. Users can revoke capabilities later in Settings.
 
-## Bundled example: Stream Deck
+### Author flow
+
+- Write `manifest.json` + TypeScript file (and/or WASM module)
+- Pit reads from `~/.stardust/extensions/` (or per-show in the bundle)
+- No compilation step if accepting TS via on-the-fly transpile (esbuild) — `.js` files also work directly
+
+### Distribution
+
+- **Local install** — drop the bundle in `~/.stardust/extensions/`
+- **Per-show install** — include the bundle in the show file's `extensions/` folder (travels with the show)
+- **Marketplace install** (v2.0+) — install via the marketplace; same `.stardustext` bundle, signed + verified
+- **Manual share** — email a `.stardustext` folder
+
+## Host API surface
+
+What the host exposes to extensions:
+
+### Read APIs (with `show-read` capability)
+
+- `getShow()` — current show metadata
+- `getCurrentSong()` / `getCurrentPatch()`
+- `getRig()` — current rig configuration
+- `getEngineStatus()` — current engine state (CPU, latency, plugin status)
+- Event subscriptions: `onPatchChange`, `onSongChange`, `onTransportStateChange`
+
+### Write APIs (with `show-write` capability)
+
+- `advancePatch()` / `previousPatch()` / `jumpToPatch(id)`
+- `triggerPanic()`
+- `sendMidi(message)` (with `midi-out` capability)
+- `setTransportState(state)`
+
+### UI extension APIs (with `ui-extend` capability)
+
+- `provideWidget({ id, render, config })` — register a new widget type
+- `provideFileImporter({ mimeType, parse })` — register a file importer
+- `provideFileExporter({ mimeType, serialize })` — register an exporter
+- `provideCommand({ id, label, handler })` — register a command (bindable to rig buttons, footswitches, Stream Deck)
+
+### Network APIs (with `network:host` capabilities)
+
+- `fetch(url, init)` — scoped to declared hosts only
+
+## Stream Deck as bundled example
 
 The v0.15.0 release ships **Stream Deck support as a bundled extension** — proving the API by using it.
 
 The extension:
 
-- Discovers connected Elgato Stream Deck devices via USB HID
+- Discovers connected Elgato Stream Deck devices via USB HID (declared `usb-hid` capability)
 - Renders button labels + icons to the deck
-- Sends button presses as actions to the engine (bound to button/switch rig components)
+- Sends button presses as commands to the engine (bound to button/switch rig components)
 - Updates button state reactively (mute toggles light up, current patch highlights, etc.)
+- Ships a "Stream Deck mirror" widget for the Perform layout
 
-It's a real, useful extension that exercises every API surface — and it ships with the app. If the Stream Deck integration breaks, the extension API broke; that's the test.
+It's a real, useful extension that exercises every API surface — and it ships with the app. If the Stream Deck integration breaks, the extension API broke; that's the regression test.
 
 ## ADR-0007
 
-The extension API architecture decision lives in **ADR-0007**, written as part of v0.15.0. Topics:
+The extension-API architecture decision lives in **ADR-0007**, written as part of v0.15.0. Topics:
 
 - Sandbox model and capability declaration
 - TS ↔ WASM bridge contract
 - Versioning + back-compat policy
-- Marketplace integration touch points (v1.x)
+- Marketplace integration touch points (v2.0+)
+
+## WASM — why it's the right call
+
+**What it is:** a binary instruction format that runs in a sandboxed VM. Languages that compile to WASM include Rust, C/C++, Zig, AssemblyScript, Go.
+
+**Properties:**
+
+- Sandboxed by default
+- Near-native performance (~5–15% slower than native Rust for compute-heavy work)
+- Single binary, cross-platform
+- Language-agnostic
+
+**Are we using it internally today?** No — Stardust core is native Rust + React.
+
+**Where WASM fits:**
+
+| Use case | WASM fit | Why |
+|---|---|---|
+| Extension API (v0.15.0) | ✅ Strong | Third-party code from random authors — sandboxing essential |
+| Custom user DSP nodes (v2.0+) | ✅ Strong | Same reasons, plus realtime safety statically verifiable at load |
+| User-built CLAP/AU shim plugins | ✅ Good | Lets users build format adapters without C++ |
+| Marketplace-distributed instruments | ✅ Good | First-party "Stardust effects" as WASM — works on every platform without per-OS builds |
+| Internal Stardust code | ❌ No | Already Rust-native; WASM would add 10% overhead for no gain |
+| Patch / show file format | ❌ Wrong tool | Data, not code |
+| React UI | ❌ No benefit | Webview JS is fine |
 
 ## What's deferred
 
 - **Realtime extension surface** (custom DSP / graph nodes) — v2.0+
-- **Bidirectional extension marketplace** with paid distribution — v1.x
+- **Bidirectional extension marketplace** with paid distribution — v2.0+
 - **Native module plugins** — never (incompatible with sandboxing)
+- **Extension hot-reload** during a show — never (Performance Lock blocks it)
 
 ## Related pages
 
@@ -106,5 +196,5 @@ The extension API architecture decision lives in **ADR-0007**, written as part o
 />
 
 - [Plugin hosting](/docs/pit/features/plugin-hosting/)
-- [Custom sampler](/docs/pit/features/custom-sampler/) (post-v1 extension territory)
-- [Marketplace](/docs/pit/features/marketplace/) (post-v1, leans on the extension model)
+- [Marketplace architecture](/docs/ecosystem/marketplace-architecture/) — post-v1.0 marketplace leans on the extension model
+- [Custom sampler](/docs/pit/features/custom-sampler/) — likely lives as a v2.0+ extension once realtime WASM ships

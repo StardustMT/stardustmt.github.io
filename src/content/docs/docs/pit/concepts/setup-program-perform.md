@@ -1,6 +1,6 @@
 ---
 title: "Setup, Program, and Perform"
-description: "The three top-level modes of the Pit shell, plus the orthogonal Performance Lock toggle."
+description: "The three top-level modes of the Pit shell, plus the orthogonal Performance Lock toggle. What lives where and why."
 ---
 
 Pit is organized around three top-level modes plus one orthogonal toggle. The mode you're in determines what's on screen; the toggle determines whether the app accepts destructive operations.
@@ -16,7 +16,7 @@ Pit is organized around three top-level modes plus one orthogonal toggle. The mo
 
 The earlier model — "Edit Mode" and "Live Mode" — collapsed rig configuration into the same surface as patch authoring. In practice these are different jobs done at different times:
 
-- **Setup** is what you do **once per rig** (or once per venue). New MIDI controller? You're in Setup. New audio interface? Setup. These are configuration changes that should survive a show file moving between machines.
+- **Setup** is what you do **once per rig** (or once per venue). New MIDI controller? Setup. New audio interface? Setup. These are configuration changes that should survive a show file moving between machines.
 - **Program** is what you do **per show**. Songs, patches, click tracks, backing tracks, layout work. The pre-production heavy lifting.
 - **Perform** is what you do **at the show**. Read-only authoring, live-only operations, large-and-readable UI.
 
@@ -24,53 +24,138 @@ Three modes give each surface room to be the right shape for its job — and let
 
 ## Setup mode
 
-Rig and show configuration. The things that don't change song-by-song.
+The *"I'm getting ready"* mode. Configure the rig and show metadata before authoring patches.
 
-- **Audio devices** — input + output device, sample rate, buffer, routing to buses
-- **MIDI devices** — connected controllers, hardware mapping, learn
-- **Rig components** — keyboards, pads, footswitches, expression pedals, button rigs
-- **Buses** — main mix, IEM mix, click bus, conductor bus, custom routes
-- **Show metadata** — title, production info (revival-aware), distribution settings, autosave preferences
-- **Plugin scan** — re-scan triggers, scan cache state, plugin requirements report
+### Setup → Rig (Screen)
 
-Setup changes typically apply to the show as a whole, or to your rig regardless of show.
+Build the hardware rig.
+
+- Component library: keyboard, pads, footswitch, expression pedal, sustain pedal, button/switch
+- Compound component builder (drag primitives into a named compound — e.g., a `compound:RD-2000` with keys + wheels + sustain + footswitch + expression all bound)
+- Save scope toggle: show-local / global
+- MIDI Learn on every learnable field
+- Per-component config inspector
+- **Rig component widget editor** (sub-screen) — grid editor for how the compound renders as a Perform widget
+
+### Setup → Show Settings (Screen)
+
+Show-level configuration.
+
+- Production / Source / Distribution metadata (revival-aware)
+- Tempo defaults — master BPM removed; tempo lives on songs
+- Audio output buses (FOH, IEM-click, IEM-band, etc.)
+- Autosave settings
+- Master volume + global panic key binding
+- Plugin scan paths
+
+### Setup → Re-learn All (Screen — sub-screen)
+
+The **Learn Master tool**. Walk through every learnable field in the show one by one. Use when:
+
+- Moved to a new machine
+- Got a new keyboard
+- Sent show to someone else with different hardware
 
 ## Program mode
 
-Show authoring. The bulk of pre-production happens here.
+The *"I'm authoring"* mode. Build patches, manage library, balance.
 
-- **Outline** (left sidebar) — show → songs → patches, plus the library
-- **Canvas** (center) — depending on selection:
-  - Patch selected → patch graph editor
-  - Song selected → song settings (sub-tabs: Settings / Click / Backing / Patches)
-  - Library entry selected → library entry editor
-- **Inspector** (right sidebar) — properties of the selected node, patch, or song
-- **Click track editor** — v0.12.0
-- **Layout editor** — v0.11.0; configures what Perform mode looks like
+### Program → Patch Editor (Screen)
 
-Performance Lock can be enabled in Program mode — useful for rehearsals where you don't want to accidentally edit the graph while testing things.
+Edit the active patch. The bulk of programming work happens here.
+
+- Patch graph editor (currently shipping in v0.5.0)
+- `source.compound` node (drag rig component as single node) — v0.10.0
+- Live preview renders full configured controller widget (keys + wheels + sustain; excludes non-tone controllers) — v0.10.0
+- Per-patch tempo metadata (Advanced override) — v0.8.0
+- Per-patch trim/gain field — v0.10.0
+- Shared-patch banner *"Instance of 'X'"* — v0.10.0
+- Missing-plugin warning icons + greyed nodes — v0.7.0
+
+### Program → Patch Library (Screen)
+
+Manage show + global patch library.
+
+- All patches in show filtered by song
+- "Save to global" toggle per patch
+- Drag patch from library into song → creates reference (alias)
+- Reference inspector — Basic + Advanced overrides
+- "Find usages" — query references by library ID
+- Orphan handling banners
+
+See [Patch library](/docs/pit/features/patch-library/) for the full all-patches-as-references data model.
+
+### Program → Balance / EQ Tool (Screen)
+
+Level-match patches via LUFS measurement.
+
+- Offline render — no speakers
+- Cross-patch level audit
+- Per-patch trim adjustment + tilt EQ
+- A/B compare
+
+See [Balance tool](/docs/pit/features/balance-tool/) for the full audio engineering breakdown.
+
+### Program → Pit Mixer (Screen)
+
+Multi-channel audio input for MD in silent-pit / IEM contexts.
+
+See [Pit Mixer](/docs/pit/features/pit-mixer/).
+
+### Program → Click Track Editor (Song tab)
+
+Author bar-by-bar tempo curves with vamps / repeats / cues.
+
+See [Click track editor](/docs/pit/features/click-track-editor/).
 
 ## Perform mode
 
-The live performance view. What's in front of you for hours during a show.
+The *"I'm playing"* mode. Configure live layout; go fullscreen for show.
 
-- Fully configurable via the Program-mode layout editor
-- Widgets are the only thing on screen — no authoring chrome
-- **Read-at-a-glance** — large default fonts, generous spacing, high-contrast theme available
-- **Touch-friendly** — interactive widgets sized for tap targets
-- **Pop-out floating Windows** for second monitors (conductor cam, parameter favorites)
-- **Live fullscreen mode** — hides menu bar and any non-Perform chrome
+### Perform → Layout Editor (Screen)
 
-What's not in Perform mode (these belong to Program):
+Design the live screen.
 
-- VST chain editing
-- MIDI Learn
-- Layout editing
-- Audio / MIDI device settings
-- Plugin browser
-- File operations
+- Widget palette (full catalog in v0.11.0)
+- Grid canvas (snap-to-grid default on)
+- Per-widget config inspector
+- Drawing primitives (box, line, divider)
+- Image widget
+- Move / resize / rotate / z-order
+- **Global default layout + per-song override layouts** (cascading)
+- Layout templates picker (Blank, Minimal, Cabaret, MD Console)
 
-If you need any of these mid-show you flip Performance Lock off, switch to Program, do the thing, switch back. Ideally you never need to.
+### Perform → Live (Screen — fullscreen)
+
+What the player sees during the show.
+
+- Renders the active layout (global or per-song override)
+- All widgets reactive (keyboard widget shows pressed keys; pedals show position; meters show live RMS; transport shows playhead; engine monitor updates per-block)
+- Pre-show validation gate before entering (overrideable with confirm)
+- **No hard-forced widgets** — user-placed everything. Panic + outline are widgets, not chrome.
+- Exit Live returns to Perform editor
+
+## Floating windows (not modes)
+
+Windows that float over any mode, can be dragged to second monitors:
+
+- **Settings** — app-wide preferences (Audio, MIDI, Plugins, Theme, Autosave, Telemetry, Shortcuts, About)
+- **Plugin GUI** — one per loaded plugin, embedded via CLAP GUI extension
+- **Conductor cam pop-out** — for second-monitor display
+- **Parameter favorites pop-out** — touch-target parameter widgets
+
+## Modals (transient)
+
+- **New Show wizard** — 6-step show creator
+- **Close blocker** — Save / Discard / Cancel on unsaved changes
+- **Merge graph edits** — per-instance update/keep/three-way-merge
+- **Orphan reattach** — re-link / save-new / keep-snapshot for missing library entries
+- **Plugin requirements report** — missing-plugin list with "find this plugin" links
+- **Pre-show validation gate** — blocks Live entry; overrideable
+- **Crash reporter consent** — first-launch opt-in
+- **Telemetry consent** — first-launch opt-in
+- **Theme save / share** — theme editor output
+- **Extension install permission** — capability consent UI
 
 ## Performance Lock
 
@@ -116,5 +201,6 @@ The three-mode shell wires into the app in **v0.9.0**. Until then, the live app 
 
 - [Shows, Songs, and Patches](/docs/pit/concepts/shows-songs-patches/)
 - [Cascading settings](/docs/pit/concepts/cascading-settings/)
+- [Screen inventory](/docs/pit/screens/) — every surface with its target version
 - [New Show wizard](/docs/pit/features/new-show-wizard/)
 - [Performance Lock details](/docs/pit/reliability/performance-lock/)

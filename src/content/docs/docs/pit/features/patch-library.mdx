@@ -1,114 +1,198 @@
 ---
 title: "Patch library"
-description: "Every patch in Stardust is a reference to a library entry. The data model unification that makes reuse, sharing, and the marketplace possible."
+description: "Every patch in Stardust is a reference to a library entry. The unified data model that the marketplace, sharing hub, and collaboration features rest on."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.10.0" variant="note" />
+<Badge text="📋 Planned · v0.10.0" variant="note" />
 
-> A patch in Stardust is never inline. It's always a reference to a library entry. This is the data model unification that the marketplace, sharing hub, and collaboration features all rest on.
+> A patch in Stardust is never inline. It's always a reference to a library entry. There is one data model, one code path, one UX flow.
 
-## The model
+## Why one model wins
 
-In other live-performance hosts, a patch is a struct that lives inside the show file. If you want the same patch in two songs, you copy-paste it. If you fix a bug in one copy, the other diverges.
+In most live-performance hosts a patch is a struct that lives in the show file. If you want the same patch in two songs you copy-paste. Fix a bug in one copy, the other diverges. "Save to library" is a separate concept; aliasing is a separate code path; sharing has to decide which patches to bundle.
 
-Stardust takes a different approach: **every patch is a reference to a library entry.** Songs hold an ordered list of references; the actual patch graph lives once, in a library entry. Edits to the library entry propagate to every reference. Copying is intentional, not default.
+Stardust takes a different approach: **every patch lives in a library entry**, every patch *in a song* is a reference to a library entry, and library entries carry a `scope: "show" | "global"` field. There is no inline patch type.
+
+What that buys us:
+
+- One data type, one code path, one UX flow
+- "New patch" creates both a library entry (show-scope, `Untitled Patch`) and a reference at the same time
+- "Save to global" flips `scope: "show"` → `scope: "global"` — no restructure
+- "Duplicate" creates a new library entry + reference (no shared history)
+- Aliasing is just "a reference to the same library id"
+- Sharing always bundles the entries the show references
+- CRDT sync (post-v1.0) becomes trivial because the data is already normalized
+
+## Storage
 
 ```
-Library entry (the source of truth)
-  ↑ referenced by
-Song instance #1 (carries reference + per-instance overrides)
-Song instance #2 (carries reference + per-instance overrides)
+~/.stardust/library/              # global library (per-user)
+├── patches/
+│   ├── 8e3f-9c2a.json            # one file per library entry, named by uuid
+│   ├── 4a1c-7d8e.json
+│   └── ...
+├── rig-components/
+│   └── 2b9d-1f4e.json
+└── blocks/
+    └── ...
 ```
 
-## Scope
+```
+my-show.stardustshow/             # the show bundle
+├── show.json                     # references library entries by id
+├── libraries/
+│   ├── patches.json              # show-scoped library entries
+│   ├── rig-components.json
+│   └── blocks.json
+├── assets/
+│   ├── audio/                    # backing track stems
+│   ├── images/                   # logos, conductor cam overlays
+│   └── samples/                  # SFZ files, recorded samples
+└── thumbnails/                   # cached widget previews
+```
 
-Each library entry has a single `scope` field with one of two values:
+## Library entry shape
 
-- **`show`** — the library entry lives inside this show file only. Travels with the show.
-- **`global`** — the entry lives in the user's global library. Available to every show on this machine.
+```ts
+LibraryPatch {
+  id: "8e3f-9c2a",                // uuid, unique
+  scope: "show" | "global",
+  name: "Full Strings",
+  graph: PatchGraph,
+  defaults: {
+    tempo?: number,
+    transpose?: number,
+    trim?: number,                // dB
+    notes?: string                // markdown
+  }
+}
+```
 
-When a show is shared (zip export, or v2.0+ collaboration), global entries it references are **snapshot-bundled** so the recipient sees them even without the source library.
+## Reference shape
 
-## Reference overrides
+```ts
+PatchRef {
+  refId: "ref-12",                // unique within show
+  libraryId: "8e3f-9c2a",         // points at library entry
+  overrides: {
+    // Basic overrides (shown by default in inspector)
+    name?: string,
+    notes?: string,
+    tempo?: number,
+    transpose?: number,
+    trim?: number,
+    color?: string,               // outline visual differentiation
+    tags?: string[],
+    // Advanced overrides (collapsed by default)
+    midiChannelOffset?: number,
+    busRoutingOverride?: BusRouting,
+    pluginParamOverrides?: Record<string, number>,
+    fxBypassOverrides?: string[],
+    onEnterTrigger?: TransportTrigger,
+    onExitTrigger?: TransportTrigger,
+    customCss?: string
+  },
+  orphan?: {
+    snapshot: PatchGraph,
+    lostAt: timestamp
+  }
+}
+```
 
-A reference carries the library entry's graph as-is plus a per-instance **override block**. The override block has two tiers:
+## Resolution
 
-### Basic overrides (cheap to set, common)
+When a show opens:
 
-- `name` — what the instance is called in this song
-- `notes` — instance-specific show notes
-- `tempo` — overrides the patch's default tempo
-- `transpose` — overrides the patch's transpose value
-- `trim` — per-instance gain trim (dB)
-- `color` — UI color tag
-- `tags` — searchable tag list
+1. Walk the show's `libraries/` first, then the user's global `~/.stardust/library/`
+2. For each `PatchRef`, look up `libraryId` in the resolved library
+3. If found: render with overrides applied — `displayName = ref.overrides.name ?? library.name`, etc.
+4. If not found: check `orphan.snapshot`; render from snapshot with the orphan banner; if absent (defensive), render error state
 
-### Advanced overrides (powerful, less common)
+## Patch instance UX
 
-- `midiChannelOffset` — shift incoming MIDI by N channels
-- `busRoutingOverride` — send to a different bus than the patch default
-- `pluginParamOverrides` — per-plugin parameter values
-- `fxBypass` — list of FX nodes bypassed for this instance
-- `onEnterTriggers` / `onExitTriggers` — fire commands when this patch becomes active / leaves
-- `customCssClass` — for Perform-mode widget styling
+- **Outline** — aliased patches show "Instance of 'Full Strings'" label and a small chain icon
+- **Patch editor with shared patch open** — banner: *"Shared — N instances. Graph edits trigger merge UI."*
+- **Inspector** — Basic overrides visible by default; Advanced collapsed but expandable
+- All override fields pre-populated from library defaults; user edits override only that field
+- **No explicit "detach" command** — simpler UX. Save-as-new gets you a fresh entry if you really want to fork.
+- **Outline rename of a reference** updates only the `name` override (e.g., library is "Full Strings", instance is "b42. Full Strings")
 
-## Graph edits trigger merge UI
+## Graph edit propagation (the merge UI)
 
-If you edit the graph of a library entry that's referenced by multiple song instances, you get a **merge dialog** when you save:
+Editing a globally-shared patch's graph is where most live-performance hosts get scary. Stardust handles it explicitly.
 
-| Instance | Action |
-|---|---|
-| Hamilton — Helpless | ☑ Update to new graph |
-| Hamilton — Wait For It | ☐ Keep current graph (creates an orphan snapshot) |
-| Hadestown — Way Down Hadestown | ⓘ Three-way merge (instance had its own override conflicts) |
+When you save changes to a globally-shared patch's graph:
 
-The default action for each row is "update." You explicitly opt out per-instance for any case where the new graph is wrong for that instance.
+1. Modal: *"Save changes to global 'Full Strings'?"*
+2. Lists every other use of this library entry with a per-instance checkbox
+3. Per instance, a dropdown: **Update this instance** / **Keep current** / **Three-way merge**
+4. **Three-way merge view** — per-node diff. Shows base / source-edit / instance-overrides side-by-side. User picks per change.
+5. "Always update silently" checkbox at the bottom — becomes a per-show preference for future edits
+
+The dialog defaults to "Update" on every instance with no conflicting overrides, "Three-way merge" on any instance that has its own override on a changed node. The user can override the default per row.
 
 ## Orphan handling
 
-If a library entry is deleted (or the global entry referenced by a show isn't on this machine), references become **orphans**:
+When a library entry is deleted, every reference in every open show becomes an **orphan**:
 
-- The reference freezes the **last-known graph** as an `orphan.snapshot` inside the song
-- A banner appears on the affected patch:
-  > *This patch's library entry is missing. Showing snapshot from last known state.*
-- Three actions:
-  - **Re-link** — point this reference at a different library entry
-  - **Save as new** — promote the snapshot into a new library entry
-  - **Keep as orphan** — leave it frozen indefinitely
+1. System sweeps all open shows and shows known to it
+2. For each reference, the `orphan.snapshot` field is populated with the last-known graph
+3. The reference is now self-contained (functional but disconnected)
+4. **Outline icon** — broken-chain marker on the patch
+5. **Patch editor banner** — *"This patch references 'Full Strings', which was deleted. Frozen at last edit."*
+6. **Action buttons**:
+   - **Re-link to existing** → pick another library entry, copy graph from there
+   - **Save as new global** → create new global library entry from snapshot, re-point reference
+   - **Save as show-local** → create new show-scoped library entry, re-point reference
+   - **Keep as orphan** → no action; ref keeps its snapshot indefinitely
 
-Orphans never break a show. The snapshot stays playable.
+### Lazy orphaning
 
-## Promoting and demoting scope
+For shows opened months later: the open-flow detects a missing `libraryId` and populates `orphan.snapshot` on open. No data loss. Cross-show detection is bounded to the open shows; orphaning is on-demand.
 
-- A `show` entry can be **promoted to `global`** — it leaves the show file and lives in the global library; the show reference now points at the global one
-- A `global` entry can be **demoted to `show`** — it's copied into the show file and the reference is rewritten
+## Sharing model
 
-Both are explicit user actions in the library panel.
+When you save/export a show:
 
-## How this enables the marketplace
+1. Walk the show's references
+2. Find every global library entry used
+3. Snapshot them into the show's `libraries/patches.json` with `scope: "show"` and a `derivedFrom: "global-id"` marker
+4. The show is now self-contained — anyone receiving it gets working patches without needing your global library
 
-A v1.x marketplace patch is just a library entry with extra metadata (author, license, version, install source). Installing a patch from the marketplace creates a new `global` library entry; every show that uses it carries a reference. Marketplace updates are propagated to every show automatically.
+When a recipient opens the show, they can:
 
-This also enables the v1.x **community share hub** — anonymous sharing of single library entries.
+- **Use as-is** — snapshots stay show-local
+- **Import to global library** — copies the snapshots into their `~/.stardust/library/`, re-points the show's references to the (now imported) global ids
+
+This is the same model the v2.0+ marketplace uses for distribution — a marketplace patch install becomes a new global library entry the recipient's shows can reference.
+
+## Scope promotion / demotion
+
+- **Promote `show` → `global`** — flips the `scope` field; the entry moves from `libraries/patches.json` into the user's `~/.stardust/library/`; the show's references stay pointed at the same id, but now resolve to global instead of show-local
+- **Demote `global` → `show`** — flips the `scope` field; copies the entry into the show file; the references update to point at the new show-local id
+
+Both are explicit user actions in the library panel — no implicit promotion.
 
 ## What ships in v0.10.0
 
 - All-patches-as-references data model
-- `show` / `global` scope
-- Basic + Advanced overrides
-- Graph-edit merge dialog
-- Orphan snapshot + banner + re-link/save-new/keep flow
-- Promote / demote actions
-- A library panel UI on the left side of the Program-mode outline
+- `show` / `global` scope on every entry
+- Basic + Advanced override fields on `PatchRef`
+- Graph-edit merge UI with three-way merge view
+- Orphan snapshot + banner + Re-link / Save-as-new / Keep flow
+- Promote / demote actions in the library panel
+- Library panel UI on the left side of the Program-mode outline
+- Sharing snapshot bundling on export
 
-## What's deferred
+## What's deferred to v1.x or v2.0+
 
-- **Marketplace integration** — v1.x
-- **Community share hub** — v1.x
-- **Plugin-bundle install** that auto-creates library entries — v2.0+
+- **Marketplace integration** — v2.0+
+- **Community share hub** — v1.x bridge step (free anonymous distribution)
 - **Cross-show search** for library entries — v1.x
+- **CRDT-backed real-time collab** on a shared library entry — v2.0+ (the data model is already CRDT-friendly because it's normalized + reference-based)
+- **Plugin-bundle install** that auto-creates library entries — v2.0+
 
 ## Related pages
 
@@ -116,3 +200,4 @@ This also enables the v1.x **community share hub** — anonymous sharing of sing
 - [Cascading settings](/docs/pit/concepts/cascading-settings/)
 - [Community sharing](/docs/pit/features/community-sharing/)
 - [Marketplace](/docs/pit/features/marketplace/)
+- [Marketplace architecture](/docs/ecosystem/marketplace-architecture/)

@@ -1,11 +1,11 @@
 ---
 title: "Infrastructure choices"
-description: "Why Stardust's cloud-side defaults are Cloudflare R2 + Fly.io + Neon + Clerk + Plausible + GlitchTip — and why the architecture stays provider-agnostic."
+description: "Why Stardust's cloud-side defaults are Cloudflare R2 + Fly.io + Neon + Clerk + Plausible + GlitchTip. Why we don't default to AWS or GCP. Why the architecture stays provider-agnostic anyway."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="v2.0+ context" variant="tip" />
+<Badge text="💭 v2.0+ context" variant="tip" />
 
 > The app is local-first. The cloud parts are additive. But when cloud parts ship, they have to be cheap to run, easy to self-host, and not lock anyone into a single vendor — including us.
 
@@ -16,7 +16,7 @@ import { Badge } from '@astrojs/starlight/components';
 | Object storage | **Cloudflare R2** | Zero egress fees, S3-compatible API, global edge presence |
 | Compute | **Fly.io** | Multi-region deploys, machine images, simple primitives |
 | Database | **Neon Postgres** | Serverless Postgres, branchable databases, generous free tier |
-| Auth | **Clerk** (or **Ory** if self-hosted) | Managed identity with social login, MFA, session management |
+| Auth | **Clerk** (managed) or **Ory Kratos** (self-hosted) | Clerk = ship fast; Ory = full control |
 | Analytics | **Plausible** | Privacy-respecting, GDPR-compliant, lightweight |
 | Errors | **GlitchTip** | Open-source Sentry alternative, self-hostable |
 
@@ -26,7 +26,7 @@ These are the **defaults**, not the only options. The marketplace server is open
 
 ### Cloudflare R2 (storage)
 
-Marketplace content (patches, SFZ packs, extensions) lives as files. Egress fees on AWS S3 add up fast for a free-tier audience. R2 charges $0 for egress, which makes the "free content stays free" promise economically viable without selling user data to fund it.
+Marketplace content (patches, SFZ packs, extensions) lives as files. Egress fees on AWS S3 add up fast for a free-tier audience. R2 charges **$0 for egress**, which makes the "free content stays free" promise economically viable without selling user data to fund it.
 
 S3-compatible API means swapping to S3, B2, or MinIO later is a config change.
 
@@ -42,7 +42,7 @@ Marketplace catalog, user accounts, licenses, ratings — small-data Postgres wo
 
 Auth is famously hard to get right. Clerk handles social login, MFA, sessions, and the boring compliance bits. Ory is the self-hostable equivalent for private deployments.
 
-Stardust never *requires* an account to use the app — auth only kicks in for marketplace-side actions (purchase, publish, rate).
+Stardust **never requires an account to use the app** — auth only kicks in for marketplace-side actions (purchase, publish, rate).
 
 ### Plausible (analytics)
 
@@ -52,6 +52,39 @@ Cookieless, GDPR-compliant, single dashboard. We want to know how many people op
 
 Sentry-API-compatible, AGPL-licensed, self-hostable. Crash reports come in from the v0.15.0 opt-in crash reporter; running our own GlitchTip means we keep that data.
 
+## Why not AWS / GCP
+
+You can use them — architecture stays the same. For Stardust specifically:
+
+### Pricing model
+
+- AWS/GCP charge **per-everything**: egress fees, per-API-call, per-IP-address
+- Marketplace = downloads = egress
+- **AWS S3 + CloudFront, 1 TB/mo egress: ~$85.** **Cloudflare R2 same: ~$15.** At 10 TB/mo: $850 vs $150
+- Smaller modern providers have **flat, predictable pricing**
+
+### Cognitive overhead
+
+- AWS has ~200 services. GCP ~100. Most aren't relevant, but learning which to use is a time sink
+- "AWS Solutions Architect" is a multi-month cert because surface area is huge
+- Smaller providers have sane defaults — deploy Docker container; it runs
+
+### Lock-in
+
+- AWS Lambda + DynamoDB + SQS → hard to leave
+- Cloudflare R2 (S3-compatible) → swap to anything S3-compatible
+- Fly.io runs Docker → swap to anything Docker
+- Neon is Postgres → swap to any Postgres
+
+### When AWS / GCP make sense
+
+- You already know them
+- You have credits (startup programs)
+- Enterprise customers require it
+- You need specific managed services (Bedrock for AI)
+
+**For Stardust today, none apply.** The user is AWS Solutions Architect certified — comfortable with either stack. The architecture is provider-agnostic; can swap if preferred.
+
 ## Why provider-agnostic matters
 
 Three reasons:
@@ -59,16 +92,6 @@ Three reasons:
 1. **Self-hosting.** A theatre company running a private marketplace doesn't have to adopt our cloud bill. They run it on whatever they already have.
 2. **Vendor risk.** Any one of the above could change pricing, get acquired, or shut down. The architecture survives any single provider going away.
 3. **Open-source ethos.** Hard-coding "Stardust runs on Cloudflare" turns the project into a Cloudflare promotional vehicle. We use them because they're the best fit *right now*, not as a commitment.
-
-## What about AWS or GCP?
-
-Both are supported by the architecture. The user running this workspace is AWS-certified — operating Stardust's cloud side on AWS would be straightforward. The reason we don't default there:
-
-- AWS egress is expensive enough to threaten "free content stays free"
-- Managed services on AWS are more configuration-heavy than the defaults above
-- The default stack costs an order of magnitude less to run for low-volume workloads
-
-For a self-hosted enterprise instance, AWS or GCP is often the right answer. The catalog server, license server, and content delivery can each be swapped independently.
 
 ## Cost shape (rough order-of-magnitude)
 
@@ -80,6 +103,8 @@ For a v2.0+ community share hub with ~5,000 monthly active users downloading fre
 - Auth: free / cheap (Clerk's free tier)
 - Total: **~$50–$150/month** to operate the bridge marketplace at this scale
 
+For the canonical paid marketplace scaled to ~10k users / 1k creators / 100k downloads/month: **~$80–270/month fixed** plus MoR transaction fees. See [Marketplace architecture](/docs/ecosystem/marketplace-architecture/) for the full cost table.
+
 If the paid marketplace launches and grows: costs scale with usage, but MoR fees and content payouts dominate the budget, not infrastructure.
 
 ## What's NOT in the stack
@@ -89,6 +114,16 @@ If the paid marketplace launches and grows: costs scale with usage, but MoR fees
 - **No Cloudflare Workers as the primary compute.** Cloudflare R2 is great; Workers' execution model is too constrained for the API server. (Workers can play a CDN/edge role.)
 - **No analytics that profile individual users.** Aggregate-only, opt-in.
 - **No tracking pixels** anywhere in the app.
+
+## Domain reservations (now, not later)
+
+Before any marketplace work starts, reserve:
+
+- `marketplace.stardust.org`
+- `accounts.stardust.org`
+- `api.stardust.org`
+
+Names should exist long before code does.
 
 ## Related pages
 

@@ -1,43 +1,38 @@
 ---
 title: "Pit Mixer"
-description: "Multi-channel audio input mixer for routing the pit's musicians to the MD's IEM bus. USB-multitrack for v1.0; Dante/AVB later."
+description: "Multi-channel audio input mixer that gives the MD their own custom mix of the pit's musicians, routed to their IEM bus. USB multitrack for v1.0; Dante/AVB v2.0+."
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-<Badge text="Planned · v0.10.0" variant="note" />
+<Badge text="📋 Planned · v0.10.0" variant="note" />
 
-> The MD needs a custom mix. The drummer's overheads, the bass DI, the violins, the conductor's talkback. None of that is routed through Pit's patches — it's its own channel strip. The Pit Mixer is where it lives.
+> Silent pit, IEMs everywhere, the MD gets whatever mix FOH bothers to send back. That's the gap. Pit Mixer turns Pit into the MD's own monitor console.
 
-## What it is
+## The use case
 
-A dedicated screen in Program mode (under Setup, but lives in its own surface) that gives the MD a multi-channel mixer for **audio inputs that aren't keyboard patches** — typically the rest of the pit's microphones and DIs coming off a USB-multitrack interface.
+Modern MT pits are silent. The musicians wear IEMs. Sound design is at front-of-house. The MD typically receives a single stereo mix from FOH, which is fine for the band's overall blend but useless for an MD who needs to hear specific musicians at specific levels for cueing — the drummer's hi-hat for click sync, the violins' lead lines for tempo cuing, the conductor's talkback dialed in clear over everything else.
 
-The output is a custom mix sent to the MD's IEM bus (separate from the main mix). The MD configures it once, adjusts during rehearsal, and runs it during the show.
+MainStage doesn't address this — its audio I/O assumes single stereo in/out. Most MDs solve it with a tiny analog mixer + DIs, which adds cables, latency, and a single point of failure.
+
+**Pit Mixer makes "I run my own monitor mix" a first-class app feature.** The MD's laptop becomes the IEM mix engine.
+
+## Where it lives
+
+A dedicated screen in Program mode, under Setup (mixer config is rig-level config, not per-show authoring). Lives in its own surface in the sidebar rather than nested inside another screen.
 
 ## Per-channel controls
 
 Each input channel gets:
 
-- **Meter** — peak + RMS, color-coded
+- **Meter** — peak + RMS, color-coded green/yellow/red
 - **Gain** — input trim in dB
 - **Pan** — for stereo IEMs
 - **Mute** / **Solo**
-- **HPF / LPF** — basic filters (corner frequency adjustable)
+- **HPF / LPF** — basic filters with adjustable corner frequencies
 - **Send level** — to the MD's IEM bus
-- **Channel label** — "Drums OH L," "Bass DI," "Violin 1," "Conductor talkback," etc.
-- **Stem assignment** — for grouping (drums / strings / brass / etc.)
-
-## Hardware scope for v1.0
-
-**USB-multitrack only.** Pit reads all available input channels from the selected audio device. Typical interfaces:
-
-- Focusrite Scarlett 18i20 — 18 in / 20 out
-- MOTU 16A — 16 in / 16 out
-- RME Fireface UFX III — 12 mic + 12 line + 12 ADAT
-- Behringer X32 / Midas — 32 in via USB
-
-Anything cpal can open as a multi-channel input device works.
+- **Channel label** — *"Drums OH L"*, *"Bass DI"*, *"Violin 1"*, *"Conductor talkback"*, etc.
+- **Stem assignment** — for grouping (drums / strings / brass / etc.) — drives per-bus widgets
 
 ## Routing model
 
@@ -49,32 +44,73 @@ USB inputs ──→ Pit Mixer channels ──→ MD's IEM bus
 
 Channels route to one or more output buses. Default routing: every channel goes to the MD's IEM bus; main mix and recording are opt-in per channel.
 
-## What's deferred to v2.0+
+State is persisted **per show** — different productions have different orchestrations and different bands, so per-show settings beat user-global preferences.
 
-- **Dante / AVB** — full network audio support. Requires more vendor coordination and a different driver model.
-- **MADI / network grid** — same.
-- **Wireless monitor protocol integration** — connecting to existing wireless IEM packs.
-- **Full FOH-shaped mixing** — Stardust is not trying to be a FOH console. The Pit Mixer is specifically for the MD's local mix.
+## Hardware compatibility (v1.0)
 
-## Why this lives in Pit, not in a separate console
+USB Class-Compliant multitrack is the v1.0 hardware scope.
 
-Most MDs in the pit don't have access to an in-pit physical mixer. The standard workflow is either:
+### ✅ Supported in v1.0
 
-1. Ask FOH to set up an IEM mix and hope they got the relative levels right
-2. Bring a tiny analog mixer and DI everything through it
+| Class | Examples |
+|---|---|
+| **Digital consoles with USB multitrack out** | Behringer X32 (32ch), Allen & Heath SQ (32ch), Yamaha QL/CL/RIVAGE, Midas M32, PreSonus StudioLive, Soundcraft Ui |
+| **Multi-input USB interfaces** | Focusrite Scarlett 18i20, MOTU 8M / 16A, RME Babyface Pro / Fireface UCX II, Universal Audio Apollo |
+| **USB audio aggregators** | macOS Aggregate Devices, Linux PipeWire combined devices |
 
-Both are bad. (1) puts the mix in someone else's hands; (2) adds cables, latency, and a single point of failure. Pit Mixer makes "I run my own monitor mix" a first-class app feature — the MD's laptop becomes the IEM mix engine.
+Anything cpal can open as a multi-channel input device works.
+
+### ⚠️ v2.0+ only
+
+| Class | Why deferred |
+|---|---|
+| **Dante / AVB** | Requires Audinate licensing + drivers. Significant engineering investment + ongoing fees |
+| **MADI / AES50** | Requires specialty interface hardware that's expensive + niche |
+| **Wireless IEM protocol integration** | Connecting to existing wireless IEM packs — vendor-specific protocols |
+
+This isn't a permanent no — these protocols cover the high end of the market. They're deferred because USB multitrack covers ~95% of MD setups and we want to ship the working core before tackling the harder stack.
+
+### Not in scope ever
+
+**Full FOH-shaped mixing.** Stardust is not trying to be a FOH console. The Pit Mixer is specifically for the MD's local monitor mix — not for mixing the show for the audience.
 
 ## Touch / fader hardware
 
-A v1.0 stretch and a confirmed v1.x deliverable: bind hardware fader controllers (Behringer X-Touch, Mackie Control, Korg nanoKONTROL) to mixer channels via the existing MIDI Learn flow. Faders, knobs, and mute/solo buttons all map to specific channels.
+A v1.0 stretch and a confirmed v1.x deliverable: bind hardware fader controllers (Behringer X-Touch, Mackie Control, Korg nanoKONTROL) to mixer channels via the existing MIDI Learn flow. Faders, knobs, mute/solo buttons all map to specific channels.
 
 ## Performance Lock interaction
 
-When Performance Lock is on, the Pit Mixer **is still adjustable** — you need to tweak levels mid-show. Channel routing changes (adding/removing channels, changing bus assignments) are blocked; gain/pan/mute/solo/send-level are not.
+When Performance Lock is on, the Pit Mixer **is still adjustable** — you need to tweak levels mid-show. What's blocked:
+
+- Adding / removing channels
+- Changing bus assignments
+- Changing routing matrix
+
+What stays adjustable:
+
+- Gain / pan / mute / solo / send-level on existing channels
+
+The MD can dial in levels during the overture without unlocking the show.
+
+## Per-channel widgets
+
+Each Pit Mixer channel is available as a widget in the Perform layout:
+
+- **Mini channel strip** — meter + gain + mute / solo
+- **Meter only** — for ensemble-level overview
+- **Send to IEM slider** — one-knob "more of this in my ear"
+
+The MD can build a Perform layout that's nothing but Pit Mixer widgets — Pit becomes a digital monitor console with the patches running alongside.
+
+## What it doesn't do
+
+- **No FOH console replacement** — by design
+- **No outboard EQ / compression beyond basic HPF/LPF** in v1.0 — channel strip stays light. Plugins on input channels are post-v1.x.
+- **No talkback routing in v1.0** — the MD can label a channel "Talkback," but Pit doesn't generate talkback itself
+- **No automatic ducking** — no auto-attenuate-strings-when-vocals-loud in v1.0
 
 ## Related pages
 
 - [Audio I/O](/docs/pit/features/audio-io/)
-- [Audio input](/docs/pit/features/audio-input/)
+- [Audio input rigs](/docs/pit/features/audio-input/) (v2.0+ — guitar / bass / vocals / winds as patch sources)
 - [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)

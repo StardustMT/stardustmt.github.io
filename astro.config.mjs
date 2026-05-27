@@ -43,14 +43,18 @@ export default defineConfig({
               label: "Concepts",
               items: [
                 { label: "Shows, Songs, and Patches", link: "/docs/pit/concepts/shows-songs-patches/" },
+                { label: "The user journey", link: "/docs/pit/concepts/user-journey/" },
                 { label: "Cascading settings", link: "/docs/pit/concepts/cascading-settings/" },
                 { label: "Setup, Program, and Perform", link: "/docs/pit/concepts/setup-program-perform/" },
+                { label: "Rig components", link: "/docs/pit/concepts/rig-components/" },
+                { label: "Show metadata model", link: "/docs/pit/concepts/show-metadata/" },
               ],
             },
             {
               label: "Architecture",
               items: [
                 { label: "Overview", link: "/docs/pit/architecture/overview/" },
+                { label: "Engine", link: "/docs/pit/architecture/engine/" },
                 { label: "Tauri stack", link: "/docs/pit/architecture/tauri-stack/" },
               ],
             },
@@ -63,6 +67,7 @@ export default defineConfig({
               collapsed: true,
               autogenerate: { directory: "docs/pit/features" },
             },
+            { label: "Widgets", link: "/docs/pit/widgets/" },
             { label: "Screens", link: "/docs/pit/screens/" },
             { label: "Roadmap", link: "/docs/pit/roadmap/" },
             { label: "Comparison", link: "/docs/pit/comparison/" },

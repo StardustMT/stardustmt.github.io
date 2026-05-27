@@ -1,0 +1,131 @@
+---
+title: "Widget catalog"
+description: "Every widget that ships in the Perform-mode layout editor (v0.11.0). The complete catalog with reactive behavior and binding model. Per-widget config specs are refined during the v0.11.0 spec session."
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="📋 Planned · v0.11.0" variant="note" />
+
+The full widget catalog ships in v0.11.0. Per-widget detailed config specs are refined during the v0.11.0 spec session — what's below is the locked-in feature list + binding model. The umbrella issue is [#62](https://github.com/orgs/StardustMT/projects/1) (`needs-refinement`); each widget spawns a sub-issue during refinement.
+
+## Reactive principle
+
+All MIDI widgets are **reactive in Live**: hardware events drive on-screen state in real time. The keyboard widget shows pressed keys; pedal widgets show position; the volume meter shows live RMS; the transport shows the playhead; the engine monitor updates per audio block.
+
+## MIDI controller widgets
+
+| Widget | Reactive to | Notes |
+|---|---|---|
+| Keyboard | Pressed keys, velocity | Range configurable (25 / 49 / 61 / 76 / 88) |
+| Pad bank | Hit pads, velocity, pressure | Per-pad color / label |
+| Sustain pedal | On/off, half-pedal position | Visual depression |
+| Expression pedal | Continuous position | Vertical / horizontal bar |
+| Pitch wheel | Position | Vertical track with center marker |
+| Mod wheel | Position | Vertical track |
+| Knob | Position | Circular indicator |
+| Fader | Position | Vertical or horizontal slider |
+| Button / switch | Pressed state | Momentary or latching visual |
+| Rig component instance | All children reactive | Renders the compound's widget-editor layout |
+
+## Text / status widgets
+
+| Widget | Behavior |
+|---|---|
+| Static text | Fixed string, full text formatting |
+| Dynamic text | Token bindings: `{show.name}`, `{current.song}`, `{current.song.number}`, `{current.patch}`, `{current.patch.number}`, `{current.tempo}`, `{current.bar}`, `{next.patch}`, `{transport.position}`, `{transport.state}` |
+| Big text | Large display readable from across the stage. Manual or bound text. |
+| Section banner | Auto-fills with current song section name (from click track cue points) |
+| Status banner | Auto-fills with engine warnings (xrun, plugin crash, etc.) |
+| Show notes pane | Markdown-rendered notes for current song / patch |
+| Notepad | Live-editable markdown. Persists changes back to show. Per-widget vs per-song scope. |
+
+## Show control widgets
+
+| Widget | Behavior |
+|---|---|
+| Song / patch list | Full mode or condensed (current song's patches only) |
+| Next-patch preview | Shows what's coming next |
+| Cue countdown | "Next patch in: 8 bars" (when click active) |
+| Panic button | Tap = engine Panic. Configurable confirm. |
+| Tap tempo button | Touchable tap target |
+| Quick action button | Configurable macro (e.g., "send all-notes-off on channels 2, 3, 5") |
+| Recording indicator | Red dot when performance recording is on |
+
+## Metering / monitoring widgets
+
+| Widget | Source | Notes |
+|---|---|---|
+| Volume meter | Configurable source (per-bus, per-output, per-patch) | RMS + peak hold |
+| Bus meter | Specific bus | Multi-channel display |
+| Spectrum meter | Real-time FFT | Useful for spotting feedback / mud |
+| VU meter | Output bus | Analog-style needle |
+| [Engine monitor](/docs/pit/features/engine-monitor/) | Engine state | CPU / RAM / xrun / peak / MIDI activity / plugin status / crash count / latency / uptime. Compact + expanded modes. |
+
+## Performance control widgets
+
+| Widget | Behavior |
+|---|---|
+| Macro knob | One knob controls N plugin params at once (filter cutoff + reverb mix + ...) |
+| Plugin parameter knob / slider | Live-tweak a specific plugin param without opening the plugin GUI |
+| Parameter favorite | Bound parameter with custom label, configurable visual |
+| Crossfader | A→B between two patches / layers |
+| Solo / mute per bus | Quickly silence FOH while keeping IEM |
+| Send-level slider per bus | Adjust how much of the current patch goes to each bus |
+| Transport | Play / pause / stop / position / cue-jump dropdown (for backing tracks) |
+| Per-track mute | Mute a specific backing-track stem (e.g., guide vocal mid-song) |
+
+## Time-related widgets
+
+| Widget | Behavior |
+|---|---|
+| Click indicator | Visual beat flash, optional bar number |
+| Transpose indicator | Current key + transpose offset |
+| Bar / beat counter | Current bar position (driven by click track) |
+| Time elapsed | Time since X (configurable: song start, show start, etc.) |
+| Clock | See detail below |
+
+### Clock widget detail
+
+Per-clock-widget config:
+
+- **Display source**: current local time / time since Go Live / time since current song started / time since current patch started
+- **Format**: 12h / 24h, with/without seconds, with/without date
+- **Color / font / size**
+- **Pause / resume** — for timing dress rehearsals where you take a break that shouldn't count
+- **Reset**
+- **Split** → captures current value as a labeled split (e.g., "Act 1 end: 47:32")
+
+Splits source:
+
+- **Manual** — user defines a list of labels in widget config
+- **Auto from song list** — labels auto-populate from the show's songs in order
+- **Auto from cue points** — labels from the active song's click-track cue points
+- **Hybrid** — auto-populate + user can edit / append
+
+Splits behavior: hit split (button or hotkey) captures the current value at the next label and advances the pointer. Displays current split label, time within split, total time. "Skip split" / "Back" controls. "Reset all" + "Export splits as CSV."
+
+**Useful side effect:** auto-from-songs mode gives MDs a real timing report — "Act 1 ran 47:32, target was 45:00. Skid Row took 4:18 vs 4:00."
+
+## Visual / decoration widgets
+
+| Widget | Behavior |
+|---|---|
+| Box / line / divider | Configurable weight, color, style (solid / dotted / dashed) |
+| Image | Drop PNG / JPG. Show logos, branding. |
+| Custom markdown | Free-form formatted text (richer than notepad) |
+
+## Conductor cam widget
+
+USB webcam feed with show-aware overlay info. USB-only for v1.0; RTSP / NDI / virtual-webcam in v2.0+. Full spec: [Conductor cam](/docs/pit/features/conductor-cam/).
+
+## Widget customization principle
+
+Every widget has a config inspector with per-widget options. Per-widget detailed config is refined during the v0.11.0 spec session. Defaults are sensible; full customization is available for power users.
+
+## Related pages
+
+- [Engine monitor](/docs/pit/features/engine-monitor/)
+- [Conductor cam](/docs/pit/features/conductor-cam/)
+- [Setup, Program, and Perform](/docs/pit/concepts/setup-program-perform/)
+- [Rig components](/docs/pit/concepts/rig-components/)

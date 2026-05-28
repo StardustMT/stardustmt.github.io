@@ -70,6 +70,7 @@ export default defineConfig({
             { label: "Widgets", link: "/docs/pit/widgets/" },
             { label: "Screens", link: "/docs/pit/screens/" },
             { label: "Roadmap", link: "/docs/pit/roadmap/" },
+            { label: "Locked decisions", link: "/docs/pit/decisions/" },
             { label: "Comparison", link: "/docs/pit/comparison/" },
           ],
         },

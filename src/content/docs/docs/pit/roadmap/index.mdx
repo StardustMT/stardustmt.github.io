@@ -127,12 +127,12 @@ These shipped intentionally — most get addressed by upcoming version work:
 - **Engine-level Panic** — all-notes-off + sustain-off across all channels
 - **Plugin scan caching** — mtime-keyed; replaces today's eager-and-uncached scan
 - **Button/switch rig component** — configurable action (panic, song advance, tap tempo, custom)
-- **Plugin GUI hosting** — basic CLAP GUI extension + window embedding
+- **Plugin GUI hosting** — CLAP GUI extension; docks in patch editor bottom panel by default, per-plugin pop-out to floating Window
 - **Learn Master tool** — re-learn all rig components 1-by-1
-- **Default Windows audio = WASAPI Exclusive** — ASIO surfaced when available; WASAPI Shared as fallback
+- **Default Windows audio** — ASIO when vendor driver detected AND input + output are the same device; WASAPI Exclusive otherwise (including split I/O); WASAPI Shared as fallback
 - **Sine synth → `instrument.testtone`** — hidden from catalog, diagnostic-only
-- **GitHub Actions PR CI** — Rust check/clippy/fmt/test; TS eslint/prettier/tsc/vitest; Storybook build
-- **Tech debt cleanup** — fix `tsc --noEmit`; delete orphaned `sound/` components
+- **GitHub Actions PR CI** ✅ shipped 2026-06-01 (stardust-pit#10) — Rust matrix mac/ubuntu/windows fmt/clippy/check/test; TS eslint/prettier/tsc/vitest; Storybook build. Cross-repo workflow in stardust-core, sibling-checkout for the path-dep.
+- **Tech debt cleanup** — fix `tsc --noEmit` ✅ (rolled into #10); delete orphaned `sound/` components
 
 ### Exit criteria
 
@@ -584,19 +584,20 @@ We ship debt intentionally when the cost-of-fixing-now beats the cost-of-fixing-
 | Hardware MIDI binds to first `source.keyboard` | Single-source patches still work; full binding is design work | v0.6.0 |
 | EQ crossover frequencies are constants | Settings panel is a bigger project | v0.15.0 polish |
 | Plugin GUI hosting missing | Engine-graph was the priority | v0.6.0 |
-| Velocity / sustain / QWERTY on on-screen keyboard | Partial in v0.6.0, full in v0.15.0 polish | v0.6.0 + v0.15.0 |
+| Velocity / sustain on preview keyboard (#18) | Moved out of v0.6.0 during refinement — not engine-completeness scope | v0.10.0 |
+| QWERTY mapping on preview keyboard | Polish, deferred | v0.15.0 |
 | Dirty-tracking is a dot, not a close-blocker | Pre-shell model — proper UX needs the shell | v0.9.0 |
 | One show seeded; no New Show / Recent Shows UI | Splash + wizard live in v0.9.0 | v0.9.0 |
-| `tsc --noEmit` fails on tsconfig project-references bug | v0.6.0 touches build anyway | v0.6.0 |
+| `tsc --noEmit` fails on tsconfig project-references bug | Fixed in stardust-pit#10 | ✅ v0.6.0 |
 | Plugin metadata scan eager + uncached | Scan-cache is a v0.6.0 deliverable | v0.6.0 |
-| `cpal::DeviceTrait::name` deprecation warnings (3) | Visible noise but no correctness impact | v0.15.0 |
+| `cpal::DeviceTrait::name` deprecation warnings (3) | Suppressed with `#[allow(deprecated)]` in stardust-pit#10; full migration to `description()` + `id()` tracked as stardust-core#12 | future (stable-id audio device picker work) |
 | No graceful shutdown on engine thread | Process exit currently does the job | v0.15.0 |
 | Storybook `PluginUIDock` has no plugins | Plugin GUI work fixes naturally | v0.6.0 |
 | `sound/` components (plugin-browser, plugin-parameter-panel, midi-mapping-row, sound-flow) orphaned | v0.10.0 library work supersedes them | v0.10.0 |
 | No autosave anywhere | Shell + wizard work owns autosave | v0.9.0 |
 | No backup / recovery / .swp-style protection | Lower priority than autosave | v0.9.0 or v0.15.0 |
 | No telemetry / crash reporter | Opt-in infra lands with release CI | v0.15.0 |
-| No CI pipeline anywhere | Lands as a v0.6.0 deliverable | v0.6.0 |
+| No CI pipeline anywhere | Shipped in stardust-pit#10 + stardust-core#11 on 2026-06-01 | ✅ v0.6.0 |
 | No release automation | Lands as a v0.15.0 deliverable | v0.15.0 |
 | Save file format is single JSON | Bundle migration is v0.13.0 | v0.13.0 |
 | No multi-channel audio input | Pit Mixer is v0.10.0 | v0.10.0 |

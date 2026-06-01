@@ -152,11 +152,11 @@ Support all three. Default rules:
 
 - **macOS** — CoreAudio (no driver wars)
 - **Linux** — ALSA → JACK if available, PipeWire fallback
-- **Windows**:
-  - Default to **WASAPI Exclusive** (ships with Windows, no driver install, 5–15 ms achievable)
-  - Surface **ASIO** if vendor drivers present (user opt-in for best latency + multi-channel)
-  - WASAPI Shared as fallback (casual / desktop use)
-- Never default to MME or DirectSound
+- **Windows** (selection logic refined 2026-05-28 during v0.6.0 refinement of [#8](https://github.com/StardustMT/stardust-pit/issues/8)):
+  - Default to **ASIO** when a vendor ASIO driver is detected AND input + output are the same device (best latency, multi-channel, lowest jitter)
+  - Default to **WASAPI Exclusive** otherwise — including any split input/output configuration (ASIO is single-device by design). Ships with Windows, no driver install, 5–15 ms achievable.
+  - **WASAPI Shared** as fallback when Exclusive can't open the device (device already in use by another app)
+  - Never default to MME or DirectSound
 
 **Sample-rate sanity**: if user picks a device that doesn't support the show's sample rate, warn + offer resample on the fly (slight quality hit) or switch device.
 

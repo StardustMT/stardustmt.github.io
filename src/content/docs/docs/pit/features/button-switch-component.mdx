@@ -17,7 +17,9 @@ The component is *the controller abstraction*, not the patch graph node — the 
 
 ## Configurable actions
 
-Each button/switch has one configured action:
+Each button/switch has one configured action. **The v0.6.0 dropdown ships only the actions whose engine support is in place** — stubbed/coming-soon dropdown entries make for confusing UX (refined 2026-05-28). Actions whose engine support arrives later land in the dropdown in that later version's release.
+
+### Actions in the v0.6.0 dropdown
 
 | Action | What it does |
 |---|---|
@@ -26,18 +28,23 @@ Each button/switch has one configured action:
 | **Jump to Patch** | Direct jump to a specified patch (by name, number, or id) |
 | **Next Song** | Advance to first patch of next song |
 | **Prev Song** | Step back one song |
-| **Panic** | Engine-level all-notes-off + sustain-off across all channels |
-| **Tap Tempo** | Sets the current song's tempo (v0.8.0+) |
-| **Start Transport** | Begin transport playback (v0.13.0 backing tracks) |
-| **Stop Transport** | Stop transport |
+| **Panic** | Engine-level all-notes-off + sustain-off across all channels (depends on [#3](https://github.com/StardustMT/stardust-pit/issues/3)) |
 | **Toggle Performance Lock** | *Go Live* / *End Show* |
 | **Toggle Bus Mute** | Mute / unmute a specified bus (FOH / IEM / etc.) |
-| **Send MIDI Message** | Send a named MIDI message out (forScore page turns, etc.) |
 | **Toggle Widget** | Show / hide a named widget in the current layout |
 | **Open Plugin GUI** | Open the GUI for a specific plugin in the active patch |
-| **Custom Macro** | Fire a configured extension-API command (v0.15.0) |
 
-Adding new actions is a v0.15.0 extension-API surface. Shipped actions cover the common cases for v0.6.0–v1.0.
+### Actions that arrive in later versions
+
+| Action | Lands in |
+|---|---|
+| **Tap Tempo** | v0.8.0 (engine tempo support) |
+| **Start Transport** | v0.8.0 |
+| **Stop Transport** | v0.8.0 |
+| **Send MIDI Message** | v0.15.0 (extension API needed for named-message routing) |
+| **Custom Macro** | v0.15.0 (extension API) |
+
+Each lands in its target version's dropdown — none ship as inert "coming soon" entries in v0.6.0.
 
 ## Hardware sources
 
@@ -54,10 +61,10 @@ Multiple bindings simultaneously is the normal case — same action on a footswi
 
 - **Type** — momentary / latching / toggle
 - **Action** — see table above
-- **Debounce time** — ms, default 25
-- **Long-press action** — optional secondary action, with threshold ms
-- **Double-tap action** — optional
-- **LED feedback** — if hardware supports (sysex pattern)
+- **Debounce time** — ms, default 50
+- **Long-press action** — optional secondary action, with threshold ms (default 800 ms)
+- **Double-tap action** — optional, with window ms (default 350 ms)
+- **LED feedback** — for latching/toggle modes, echoes state back to the bound device via matching CC/note (v0.6.0 baseline). Sysex pattern library is v1.x.
 - **Polarity invert** — some pedals are normally-closed; flip the sense
 - **Throttle** — max activations per second (defends against contact bounce or stuck signals)
 
@@ -107,11 +114,12 @@ One concept, many sources, parameterized action. The old footswitch config scree
 ## What ships in v0.6.0
 
 - Component type registered in the rig catalog
-- All built-in actions in the table above (those that depend on transport / tap tempo are stubs until v0.8.0)
-- Learn flow for hardware MIDI binding
-- Configurable widget for Perform mode (basic styling — full editor in v0.10.0)
-- Multiple bindings per component
+- The v0.6.0 action set (see "Actions in the v0.6.0 dropdown" above) — transport / tap-tempo / send-MIDI / custom-macro arrive in their own future versions
+- Learn flow for hardware MIDI binding (reuses v0.5.0 Learn machinery)
+- Configurable widget for Perform mode (basic styling — full widget editor lands in v0.10.0)
+- Multiple bindings per component (MIDI + keyboard + on-screen button)
 - Debounce + throttle + polarity invert + long-press + double-tap
+- LED feedback baseline (CC/note echo for latching/toggle modes)
 
 ## Related pages
 

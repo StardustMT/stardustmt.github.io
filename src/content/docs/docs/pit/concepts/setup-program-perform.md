@@ -71,6 +71,7 @@ Edit the active patch. The bulk of programming work happens here.
 - Per-patch trim/gain field — v0.10.0
 - Shared-patch banner *"Instance of 'X'"* — v0.10.0
 - Missing-plugin warning icons + greyed nodes — v0.7.0
+- **Plugin GUI dock** (bottom panel) — tab strip for each loaded plugin's CLAP GUI; user-resizable; per-plugin pop-out to floating window — v0.6.0
 
 ### Program → Patch Library (Screen)
 
@@ -140,7 +141,7 @@ What the player sees during the show.
 Windows that float over any mode, can be dragged to second monitors:
 
 - **Settings** — app-wide preferences (Audio, MIDI, Plugins, Theme, Autosave, Telemetry, Shortcuts, About)
-- **Plugin GUI** — one per loaded plugin, embedded via CLAP GUI extension
+- **Plugin GUI (popped out)** — secondary placement only; default is docked in the patch editor bottom panel (see Program mode → Patch Editor). User can pop any plugin out into a floating window per their preference.
 - **Conductor cam pop-out** — for second-monitor display
 - **Parameter favorites pop-out** — touch-target parameter widgets
 

@@ -14,7 +14,7 @@ These are the locked decisions behind Pit's design — collected here so a contr
 - **Plugin sandboxing (out-of-process)** is a hard requirement — currently violated, scheduled v0.7.0 — [ADR-0002](https://github.com/StardustMT/stardust-workspace/blob/main/docs/adr/0002-out-of-process-plugin-sandboxing.md)
 - **Realtime paths allocation-free** — see [Engine architecture](/docs/pit/architecture/engine/) and CLAUDE.md
 - **Engine consumes whole patch graph** — `Plan::build` → topo-sort → allocation-free `Plan::process` per block — [ADR-0006](https://github.com/StardustMT/stardust-workspace/blob/main/docs/adr/0006-engine-graph-walker.md), Accepted
-- **Audio I/O on Windows**: WASAPI Exclusive default, ASIO surfaced when available, WASAPI Shared as fallback. macOS uses CoreAudio. Linux uses ALSA → JACK → PipeWire fallback. Separate input/output devices supported (no ASIO single-device limit) — see [Latency budget](/docs/pit/reliability/latency-budget/)
+- **Audio I/O on Windows**: ASIO default when a vendor driver is detected AND input + output are the same device; WASAPI Exclusive default otherwise (including any split-I/O configuration — ASIO is single-device by design). WASAPI Shared as fallback when Exclusive fails. macOS uses CoreAudio. Linux uses ALSA → JACK → PipeWire fallback. Separate input/output devices fully supported via WASAPI — see [Latency budget](/docs/pit/reliability/latency-budget/) *(default flipped from "WASAPI Exclusive first" — refined 2026-05-28 during v0.6.0 refinement of [#8](https://github.com/StardustMT/stardust-pit/issues/8))*
 - **No VST2 support, ever** — Steinberg deprecated 2018, SDK not available to new licensees
 - **Sine synth → `instrument.testtone`** — hidden from catalog, diagnostic-only. Default built-in instrument becomes the bundled GM piano SFZ in v0.14.0
 - **Native SFZ player as graph node**, not standalone CLAP (sforzando exists for users wanting CLAP) — see v0.14.0 roadmap
@@ -39,7 +39,7 @@ These are the locked decisions behind Pit's design — collected here so a contr
 
 - **Three modes: Setup / Program / Perform** — see [concept doc](/docs/pit/concepts/setup-program-perform/)
 - **Settings is a floating Window**, not a fourth mode
-- **Plugin GUIs are floating Windows**, per-plugin
+- **Plugin GUIs dock in the bottom panel of the patch editor by default**, with per-plugin pop-out to a floating Window. User's dock-vs-float preference persists per plugin instance — see [Plugin hosting](/docs/pit/features/plugin-hosting/) *(decision reversed from earlier "floating only" — refined 2026-05-28 during v0.6.0 refinement of [#6](https://github.com/StardustMT/stardust-pit/issues/6))*
 - **New Show wizard is a Modal** — see [New Show wizard](/docs/pit/features/new-show-wizard/)
 - **Splash is pre-shell screen** (separate from the three modes)
 - **Native menu bar** for File/Edit/View/Window/Help — mode switches are NOT in the menu bar

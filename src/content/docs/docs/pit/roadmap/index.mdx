@@ -132,7 +132,7 @@ These shipped intentionally — most get addressed by upcoming version work:
 - **Default Windows audio** — ASIO when vendor driver detected AND input + output are the same device; WASAPI Exclusive otherwise (including split I/O); WASAPI Shared as fallback
 - **Sine synth → `instrument.testtone`** — hidden from catalog, diagnostic-only
 - **GitHub Actions PR CI** ✅ shipped 2026-06-01 (stardust-pit#10) — Rust matrix mac/ubuntu/windows fmt/clippy/check/test; TS eslint/prettier/tsc/vitest; Storybook build. Cross-repo workflow in stardust-core, sibling-checkout for the path-dep.
-- **Tech debt cleanup** — fix `tsc --noEmit` ✅ (rolled into #10); delete orphaned `sound/` components
+- **Tech debt cleanup** — fix `tsc --noEmit` ✅ (rolled into #10); delete orphaned `sound/` components ✅ shipped 2026-06-01 (stardust-pit#11 → PR #115)
 
 ### Exit criteria
 
@@ -593,7 +593,7 @@ We ship debt intentionally when the cost-of-fixing-now beats the cost-of-fixing-
 | `cpal::DeviceTrait::name` deprecation warnings (3) | Suppressed with `#[allow(deprecated)]` in stardust-pit#10; full migration to `description()` + `id()` tracked as stardust-core#12 | future (stable-id audio device picker work) |
 | No graceful shutdown on engine thread | Process exit currently does the job | v0.15.0 |
 | Storybook `PluginUIDock` has no plugins | Plugin GUI work fixes naturally | v0.6.0 |
-| `sound/` components (plugin-browser, plugin-parameter-panel, midi-mapping-row, sound-flow) orphaned | v0.10.0 library work supersedes them | v0.10.0 |
+| `sound/` components (plugin-browser, plugin-parameter-panel, midi-mapping-row, sound-flow) orphaned | Deleted in stardust-pit#11 / PR #115; v0.10.0 will build from scratch | ✅ v0.6.0 |
 | No autosave anywhere | Shell + wizard work owns autosave | v0.9.0 |
 | No backup / recovery / .swp-style protection | Lower priority than autosave | v0.9.0 or v0.15.0 |
 | No telemetry / crash reporter | Opt-in infra lands with release CI | v0.15.0 |

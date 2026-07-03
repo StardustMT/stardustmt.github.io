@@ -20,7 +20,7 @@ The engine consumes the **whole patch graph**, not just the first instrument. Th
 - **`Plan::process(cpal_buf, spec)`** runs once per audio block:
   1. Drain hardware + UI MIDI rings
   2. Iterate nodes in topo order
-  3. Process each (CLAP plugin / native sine / 3-band EQ / mix / sink)
+  3. Process each (CLAP plugin / native testtone synth / 3-band EQ / mix / sink)
   4. Distribute outbox MIDI events to consumers via the routing table
 
 ### Guarantees

@@ -130,7 +130,7 @@ These shipped intentionally — most get addressed by upcoming version work:
 - **Plugin GUI hosting** — CLAP GUI extension; docks in patch editor bottom panel by default, per-plugin pop-out to floating Window
 - **Learn Master tool** — re-learn all rig components 1-by-1
 - **Default Windows audio** — ASIO when vendor driver detected AND input + output are the same device; WASAPI Exclusive otherwise (including split I/O); WASAPI Shared as fallback
-- **Sine synth → `instrument.testtone`** — hidden from catalog, diagnostic-only
+- **Sine synth → `instrument.testtone`** ✅ shipped 2026-07-03 (stardust-pit#9 → PR #116) — hidden from palette; only user surface is Settings → "Run engine self-test". Bumps `stardust.patch` + `stardust.show` schemas to v2 with a v1→v2 rename migration. Engine topo now lifts MIDI sources ahead of consumers so single-block MIDI delivery is guaranteed.
 - **GitHub Actions PR CI** ✅ shipped 2026-06-01 (stardust-pit#10) — Rust matrix mac/ubuntu/windows fmt/clippy/check/test; TS eslint/prettier/tsc/vitest; Storybook build. Cross-repo workflow in stardust-core, sibling-checkout for the path-dep.
 - **Tech debt cleanup** — fix `tsc --noEmit` ✅ (rolled into #10); delete orphaned `sound/` components ✅ shipped 2026-06-01 (stardust-pit#11 → PR #115)
 

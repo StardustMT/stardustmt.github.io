@@ -109,16 +109,20 @@ When `CC 64 = 0` arrives:
 
 This is standard MIDI behavior, but easy to get wrong. Our voice tracker handles it cleanly.
 
-## Panic button
+## Panic button (shipped, v0.6.0)
 
-Even with perfect voice tracking, the **panic button** exists as a safety net:
-- Manually triggerable (UI button, MIDI cue, keyboard shortcut)
-- Auto-triggered on any anomaly (plugin disconnect, audio dropout, MIDI device loss)
-- Broadcasts `all-notes-off` (CC 123) and `sustain-off` (CC 64 = 0) on **every channel**, on **every plugin**
-- Clears the entire voice tracker
-- Audio resumes silently
+Even with perfect voice tracking, the **panic button** exists as a safety net. As shipped in v0.6.0 (`engine_panic`, stardust-pit#3):
+
+- Manually triggerable — UI button in the engine panel, **Shift+Esc** anywhere in the app (configurable binding + rig-component action land with the button/switch component, #5)
+- Completes **within one audio block** (≤ 5.3 ms @ 48 kHz / 256 frames), allocation-free on the audio thread
+- Per instrument, in order: `sustain-off` (CC 64 = 0), an explicit `note-off` + poly-aftertouch-clear for **every tracked voice**, then `all-notes-off` (CC 123), pitch-bend center, mod-wheel 0, and channel-pressure 0 — on **every channel**, on **every plugin**
+- Clears the entire voice tracker; events queued before the panic are dropped
+- Idempotent and spammable — mashing it re-sends only the controller resets
+- Auto-trigger on anomaly (plugin crash, device loss) arrives with v0.7.0 crash detection
 
 In Stardust, panic should rarely be needed. But it's there.
+
+The tracker itself shipped alongside: a fixed 16-channel × 128-note bitset per instrument node, maintained inline during MIDI fan-out — this is also what guarantees held notes survive a device rebind (`engine_rebind_routing`, #1).
 
 ## Precise tracking vs. panic-on-change
 
@@ -130,8 +134,9 @@ Precise voice tracking lets Stardust send `note-off` only for the voices that be
 
 | Phase | What's available |
 |---|---|
-| v0.2 | Voice tracker, panic key, basic note-off on patch change |
-| v0.4 | Sustain bridging modes, carry-over voices, configurable transitions |
+| ✅ v0.6.0 | Per-instrument voice tracker (bitset, fan-out-maintained), engine Panic command + UI button + Shift+Esc, tracked voices survive device rebind |
+| v0.7.0+ | Auto-panic on plugin crash / device loss (crash detection) |
+| later | Sustain bridging modes, carry-over voices on patch change, configurable transitions |
 
 ## Related pages
 

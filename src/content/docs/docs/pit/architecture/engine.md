@@ -18,10 +18,11 @@ The engine consumes the **whole patch graph**, not just the first instrument. Th
   4. Build MIDI routing tables
   5. Load + activate every plugin
 - **`Plan::process(cpal_buf, spec)`** runs once per audio block:
-  1. Drain hardware + UI MIDI rings
-  2. Iterate nodes in topo order
-  3. Process each (CLAP plugin / native testtone synth / 3-band EQ / mix / sink)
-  4. Distribute outbox MIDI events to consumers via the routing table
+  1. Drain hardware + UI MIDI ingress (events arrive pre-routed to a source node — see MIDI ingress below)
+  2. If a panic was requested, flush every tracked voice + reset controllers (see Panic below)
+  3. Iterate nodes in topo order
+  4. Process each (CLAP plugin / native testtone synth / 3-band EQ / mix / sink)
+  5. Distribute outbox MIDI events to consumers via the routing table, maintaining the voice tracker
 
 ### Guarantees
 
@@ -34,19 +35,41 @@ The engine consumes the **whole patch graph**, not just the first instrument. Th
 
 clack-host's `PluginInstance<H>` is `!Send`. The engine thread is the only thread that touches plugins — they're pinned to it. UI ↔ engine communication is lock-free ring buffers (`crossbeam` / `rtrb`), never shared plugin state.
 
-## What's shipped (v0.5.0)
+## MIDI ingress + per-source binding (shipped, v0.6.0)
 
-- `engine_graph` Plan model (ADR-0006, Accepted)
-- Multi-plugin chain hosting
-- Native nodes: 3-band stereo EQ, transpose, mix
-- Topo-sorted, allocation-free per-block processing
-- Soft per-node failure handling
+Up to 8 hardware MIDI devices feed the plan simultaneously, one pre-allocated SPSC ring each. Every source node may carry a `hardwareBinding` in its config — device (midir's opaque port id, display name as replug fallback), channel, note range, CC range. The midir input callback matches each event against the bindings that resolve to its device and pushes **pre-routed** `(source node, event)` pairs, so the audio thread does no matching at all.
+
+- **Fan-out, not first-match** — overlapping bindings all receive the event (splits and layers depend on this)
+- **`deviceId: null` = any device** — the v0.5.0 single-device back-compat path
+- **Kind event classes** — a sustain-pedal source only accepts CC 64, a pitch wheel only pitch bend, keyboards everything; wiring a pedal next to a keyboard can't double note events
+- **Disconnected ≠ unbound** — bindings persist across unplug and re-match on reconnect
+
+## Device rebind (shipped, v0.6.0)
+
+`engine_rebind_routing` swaps the cpal stream and/or the open MIDI input set **in place**. The plan lives in a callback-state bundle owned by the audio callback through a Drop-carrier: tearing a stream down hands the plan back to the engine thread, which reopens it on the new device — no plugin reloads, no buffer reallocation, held voices intact. On failure the previous device stays (or is restored) active.
+
+**Decision tree:** device identity change → rebind (same plan, new I/O). Sample-rate or buffer-size change → full plan rebuild (edge buffers and plugin activations are sized to the audio config).
+
+## Panic (shipped, v0.6.0)
+
+The plan keeps a per-instrument **voice tracker** (16 channels × 128 notes, a fixed bitset maintained inline during MIDI fan-out). `engine_panic` sets an atomic flag the callback consumes at the top of the next block — within the ≤1-block latency budget — writing straight into every instrument's inbox: sustain-off first, an explicit note-off + poly-aftertouch-clear per tracked voice, then all-notes-off (CC 123), pitch-bend center, mod-wheel 0, and channel-pressure 0 on all 16 channels. Allocation-free, idempotent, safe to spam.
+
+## What's shipped
+
+- `engine_graph` Plan model (ADR-0006, Accepted) — v0.5.0
+- Multi-plugin chain hosting — v0.5.0
+- Native nodes: 3-band stereo EQ, transpose, mix — v0.5.0
+- Topo-sorted, allocation-free per-block processing — v0.5.0
+- Soft per-node failure handling — v0.5.0
+- Per-source hardware MIDI binding + multi-device ingress — v0.6.0
+- `engine_rebind_routing` device swap without plan teardown — v0.6.0
+- Voice tracker + engine-level Panic — v0.6.0
 
 ## Trajectory
 
 | Version | Engine work |
 |---|---|
-| **v0.6.0** | `engine_rebind_routing` (swap cpal stream / midir input without rebuilding the Plan), per-source hardware MIDI binding, engine-level Panic, plugin scan caching |
+| **v0.6.0** | ✅ `engine_rebind_routing`, per-source hardware MIDI binding, engine-level Panic (all shipped 2026-07-03, PR stardust-pit#118); plugin scan caching still open |
 | **v0.7.0** | Out-of-process plugin processes via shared-memory IPC, watchdog supervisor, crash detection + recovery, hot-plug resilience |
 | **v0.8.0** | Engine transport state (stopped / playing / paused / position), click track engine node, MIDI clock send |
 | **v0.13.0** | Audio file decoding (symphonia) into ring buffers, transport-driven backing-track playback, sample-accurate cue jump |

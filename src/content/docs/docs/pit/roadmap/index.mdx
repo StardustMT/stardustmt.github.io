@@ -119,13 +119,13 @@ These shipped intentionally — most get addressed by upcoming version work:
 
 **Theme:** Close the open audio-path items v0.5.0 left behind. Patch-switching becomes seamless; hardware controllers wire to nodes one-by-one; CI starts running on every PR.
 
-**Size:** ~2 weeks. **Status:** In progress — 3/11 shipped (#10 CI, #11 orphan cleanup, #9 testtone); next is `engine_rebind_routing` (#1).
+**Size:** ~2 weeks. **Status:** In progress — 6/11 shipped (#10 CI, #11 orphan cleanup, #9 testtone, #1 rebind, #2 per-source binding, #3 Panic); next is #4 plugin scan caching.
 
 ### Scope
 
-- **`engine_rebind_routing`** — swap MIDI/audio device without tearing down the Plan
-- **Per-source-node hardware MIDI binding** — pedals, wheels, pads, switches, knobs, faders bind to specific source nodes (no more "binds to first source.keyboard")
-- **Engine-level Panic** — all-notes-off + sustain-off across all channels
+- **`engine_rebind_routing`** ✅ shipped 2026-07-03 (stardust-pit#1 → PR #118) — swap MIDI/audio device without tearing down the Plan. The Plan travels between cpal streams via a Drop-carrier: no plugin reloads, held voices intact. Device identity → rebind; sample-rate / buffer-size → full rebuild. On failure the previous device stays (or is restored) active.
+- **Per-source-node hardware MIDI binding** ✅ shipped 2026-07-03 (stardust-pit#2 → PR #118) — pedals, wheels, pads, switches, knobs, faders bind to specific source nodes (no more "binds to first source.keyboard"). Fan-out on overlap; `deviceId: null` = any device (back-compat). Device identity is midir's opaque port id + name fallback — see tech debt for the (vendor, product) drift.
+- **Engine-level Panic** ✅ shipped 2026-07-03 (stardust-pit#3 → PR #118) — per-instrument voice tracker; panic flushes tracked voices with explicit note-offs and resets sustain, CC123, pitch bend, mod wheel, and aftertouch on all 16 channels within one audio block. Panic button + Shift+Esc in the shell.
 - **Plugin scan caching** — mtime-keyed; replaces today's eager-and-uncached scan
 - **Button/switch rig component** — configurable action (panic, song advance, tap tempo, custom)
 - **Plugin GUI hosting** — CLAP GUI extension; docks in patch editor bottom panel by default, per-plugin pop-out to floating Window
@@ -581,8 +581,8 @@ We ship debt intentionally when the cost-of-fixing-now beats the cost-of-fixing-
 | Patch-switch latency scales with plugin count | Multi-plugin shipped first; warm-pool needs sandboxing | v0.7.0 |
 | Plan rebinds only on plugin-choice change (not config edits) | Edge case; live param editing not in scope yet | v0.11.0 |
 | `PluginEntry` leaks via `mem::forget` | Cheaper than fighting Rust lifetimes pre-sandboxing | v0.7.0 |
-| Live device change tears down plan | Refactor lands cleaner alongside `engine_rebind_routing` | v0.6.0 |
-| Hardware MIDI binds to first `source.keyboard` | Single-source patches still work; full binding is design work | v0.6.0 |
+| Live device change tears down plan | Fixed by `engine_rebind_routing` (stardust-pit#1 / PR #118) | ✅ v0.6.0 |
+| Hardware MIDI binds to first `source.keyboard` | Fixed by per-source binding (stardust-pit#2 / PR #118); also fixed a latent bug where injected MIDI re-distributed every block | ✅ v0.6.0 |
 | EQ crossover frequencies are constants | Settings panel is a bigger project | v0.15.0 polish |
 | Plugin GUI hosting missing | Engine-graph was the priority | v0.6.0 |
 | Velocity / sustain on preview keyboard (#18) | Moved out of v0.6.0 during refinement — not engine-completeness scope | v0.10.0 |
@@ -603,6 +603,15 @@ We ship debt intentionally when the cost-of-fixing-now beats the cost-of-fixing-
 | Save file format is single JSON | Bundle migration is v0.13.0 | v0.13.0 |
 | No multi-channel audio input | Pit Mixer is v0.10.0 | v0.10.0 |
 | No native file menu | Shell work owns the file menu | v0.9.0 |
+
+### Added in v0.6.0
+
+| Item | Why we shipped it | Cleanup target |
+|---|---|---|
+| MIDI device identity is midir's opaque port id + name fallback, not the spec'd `(vendor_id, product_id)` | midir exposes no vendor/product IDs on any platform — the #2 refinement claim was wrong. Port ids are stable on CoreMIDI; name fallback covers replug on ALSA/WinMM. Identical twin devices on platforms with unstable ids may need manual re-pick after replug | revisit if twin-device reports surface; no version planned |
+| Device rebind has a few-ms silence gap at the swap (stream close → open) | Gap-free would need a second overlapping stream + crossfade; plan/voice continuity (the expensive part) is preserved. Pending user ear-test verdict on stardust-pit#1 | revisit after ear test; v0.15.0 at latest |
+| Rebind underrun AC approximated — cpal exposes no portable underrun counter | Live-device integration test asserts the engine stays Running and audible across the swap window instead | none planned |
+| Panic keyboard shortcut is fixed (Shift+Esc), not configurable | Configurable bindings belong to the button/switch rig component (#5) + Show Settings surface | v0.6.0 (#5) |
 
 ---
 

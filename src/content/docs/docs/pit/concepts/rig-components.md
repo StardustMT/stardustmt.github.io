@@ -104,7 +104,7 @@ The compound's appearance as a single Perform widget is configured in the **rig 
 
 ## Version status
 
-- **v0.6.0** — per-source hardware MIDI binding, button/switch component, Learn Master tool
+- **v0.6.0** — per-source hardware MIDI binding ✅ shipped 2026-07-03 ([stardust-pit#2](https://github.com/StardustMT/stardust-pit/issues/2), PR #118: `hardwareBinding` on source nodes — device by stable port id, channel, note/CC ranges, fan-out on overlap, disconnected-binding persistence, inspector in the patch editor); button/switch component + Learn Master tool still open
 - **v0.10.0** — compound components, `source.compound` node, rig component widget editor
 
 ## Related pages

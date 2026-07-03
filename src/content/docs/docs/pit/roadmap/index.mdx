@@ -111,6 +111,7 @@ These shipped intentionally — most get addressed by upcoming version work:
 - `PluginEntry` leaks intentionally via `mem::forget` → cleaned up by v0.7.0 sandboxing rewrite
 - Live device change tears down plan → fixed by v0.6.0 `engine_rebind_routing`
 - EQ crossover frequencies are constants → revisit during audio.eq settings panel work
+- Engine self-test signal is a C6 MIDI note (≈1046.5 Hz) at full velocity, not the spec'd free-running 1 kHz sine at −18 dBFS — RMS criterion passes comfortably; acceptable as-shipped (stardust-pit#9); revisit if the diagnostic gains level-calibration duties, no version planned
 
 ---
 
@@ -118,7 +119,7 @@ These shipped intentionally — most get addressed by upcoming version work:
 
 **Theme:** Close the open audio-path items v0.5.0 left behind. Patch-switching becomes seamless; hardware controllers wire to nodes one-by-one; CI starts running on every PR.
 
-**Size:** ~2 weeks. **Status:** Refinement session is the next chunk of work.
+**Size:** ~2 weeks. **Status:** In progress — 3/11 shipped (#10 CI, #11 orphan cleanup, #9 testtone); next is `engine_rebind_routing` (#1).
 
 ### Scope
 

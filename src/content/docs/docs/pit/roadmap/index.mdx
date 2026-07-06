@@ -119,15 +119,16 @@ These shipped intentionally — most get addressed by upcoming version work:
 
 **Theme:** Close the open audio-path items v0.5.0 left behind. Patch-switching becomes seamless; hardware controllers wire to nodes one-by-one; CI starts running on every PR.
 
-**Size:** ~2 weeks. **Status:** In progress — 6/11 shipped (#10 CI, #11 orphan cleanup, #9 testtone, #1 rebind, #2 per-source binding, #3 Panic); next is #4 plugin scan caching.
+**Size:** ~2 weeks (revised ~3 with rig-lite). **Status:** In progress — 6/11 original scope shipped (#10 CI, #11 orphan cleanup, #9 testtone, #1 rebind, #2 per-source binding, #3 Panic). **Re-sequenced 2026-07-06:** a minimal **rig-lite** slice ([#122](https://github.com/StardustMT/stardust-pit/issues/122)) pulled forward from v0.10.0 — #5 and #7 already assumed a real rig surface, and #2's per-node bindings are the interim model (device identity belongs on the rig component; per-patch bindings accrue migration debt the longer Program work continues without it). Next: #122 refinement → implementation, then #5 → #7; #4/#6/#8 close out the version.
 
 ### Scope
 
 - **`engine_rebind_routing`** ✅ shipped 2026-07-03 (stardust-pit#1 → PR #118) — swap MIDI/audio device without tearing down the Plan. The Plan travels between cpal streams via a Drop-carrier: no plugin reloads, held voices intact. Device identity → rebind; sample-rate / buffer-size → full rebuild. On failure the previous device stays (or is restored) active.
 - **Per-source-node hardware MIDI binding** ✅ shipped 2026-07-03 (stardust-pit#2 → PR #118) — pedals, wheels, pads, switches, knobs, faders bind to specific source nodes (no more "binds to first source.keyboard"). Fan-out on overlap; `deviceId: null` = any device (back-compat). Device identity is midir's opaque port id + name fallback — see tech debt for the (vendor, product) drift.
 - **Engine-level Panic** ✅ shipped 2026-07-03 (stardust-pit#3 → PR #118) — per-instrument voice tracker; panic flushes tracked voices with explicit note-offs and resets sustain, CC123, pitch bend, mod wheel, and aftertouch on all 16 channels within one audio block. Panic button + Shift+Esc in the shell.
+- **Rig-lite (Setup → Rig, minimal)** — pulled forward from v0.10.0 (#122, 2026-07-06): real rig screen behind the existing Setup tab; rig component CRUD persisted in the show; device binding at the **component** level reusing #2's engine plumbing; basic MIDI Learn; source nodes reference components (`rigComponentId`, node-level `hardwareBinding` stays as fallback); engine derives its MIDI input set from the rig. Explicitly excludes compounds, widget editor, velocity curves, per-pad config (all stay v0.10.0). Exit criteria: a component bound once in Setup feeds every referencing source node across patches with no per-patch re-binding; rig edits rebind (not restart) the engine; v0.5.0-era shows with node-level bindings load and play unchanged.
 - **Plugin scan caching** — mtime-keyed; replaces today's eager-and-uncached scan
-- **Button/switch rig component** — configurable action (panic, song advance, tap tempo, custom)
+- **Button/switch rig component** — configurable action (panic, song advance, tap tempo, custom); *depends on #122*
 - **Plugin GUI hosting** — CLAP GUI extension; docks in patch editor bottom panel by default, per-plugin pop-out to floating Window
 - **Learn Master tool** — re-learn all rig components 1-by-1
 - **Default Windows audio** — ASIO when vendor driver detected AND input + output are the same device; WASAPI Exclusive otherwise (including split I/O); WASAPI Shared as fallback
@@ -240,6 +241,8 @@ These shipped intentionally — most get addressed by upcoming version work:
 - **Orphan handling** — deleted library entry → references freeze last graph as `orphan.snapshot`; banner + re-link / save-as-new / keep-snapshot options
 
 ### Scope — UI
+
+*Rig basics (component CRUD, device binding at component level, basic Learn, real Setup → Rig screen) moved to v0.6.0 as rig-lite (#122, 2026-07-06) — this version builds the rest on top of it:*
 
 - **Rig component widget editor** — grid sub-screen for compound widget appearance
 - **`source.compound` node kind**

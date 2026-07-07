@@ -44,6 +44,8 @@ Up to 8 hardware MIDI devices feed the plan simultaneously, one pre-allocated SP
 - **Kind event classes** — a sustain-pedal source only accepts CC 64, a pitch wheel only pitch bend, keyboards everything; wiring a pedal next to a keyboard can't double note events
 - **Disconnected ≠ unbound** — bindings persist across unplug and re-match on reconnect
 
+> **Changing in v0.6.0 rig-lite ([#122](https://github.com/StardustMT/stardust-pit/issues/122), refined 2026-07-06):** node-level `hardwareBinding` goes away. Source nodes reference a rig component (`rigComponentId`); the component owns the device binding, and a schema v2→v3 migration converts existing node blobs into rig components. Unassigned nodes are silent (the any-device path is removed). The ingress machinery above — SPSC rings, pre-routed fan-out, kind event classes — is unchanged; only where bindings *live* moves. The engine's open-input set becomes the union of rig-bound devices, session-wide.
+
 ## Device rebind (shipped, v0.6.0)
 
 `engine_rebind_routing` swaps the cpal stream and/or the open MIDI input set **in place**. The plan lives in a callback-state bundle owned by the audio callback through a Drop-carrier: tearing a stream down hands the plan back to the engine thread, which reopens it on the new device — no plugin reloads, no buffer reallocation, held voices intact. On failure the previous device stays (or is restored) active.
